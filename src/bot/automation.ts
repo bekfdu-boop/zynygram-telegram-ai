@@ -1,5 +1,6 @@
 import { Telegraf } from 'telegraf';
 import supportService, { SupportService } from '../services/support';
+import verificationService, { VerificationService } from '../services/verification';
 import logger from '../utils/logger';
 
 /**
@@ -20,6 +21,7 @@ import logger from '../utils/logger';
 export function registerChatAutomationHandlers(
   bot: Telegraf,
   support: SupportService = supportService,
+  verification: VerificationService = verificationService,
 ): void {
   bot.use(async (ctx, next) => {
     const update = ctx.update as unknown as Record<string, unknown>;
@@ -72,6 +74,56 @@ export function registerChatAutomationHandlers(
         },
         'Received automated business message via Telegram Chat Automation',
       );
+
+      // Check if incoming business message is a verification link or proof submission
+      const hasLink =
+        text.includes('http://') ||
+        text.includes('https://') ||
+        text.includes('t.me/') ||
+        text.includes('instagram.com/') ||
+        text.includes('tiktok.com/') ||
+        text.includes('youtu.be/');
+
+      const lowerText = text.toLowerCase();
+      const mentionsVerification =
+        lowerText.includes('tasdiqlash') ||
+        lowerText.includes('verifikatsiya') ||
+        lowerText.includes('nishon') ||
+        lowerText.includes('belgi') ||
+        lowerText.includes('reels') ||
+        lowerText.includes('story') ||
+        lowerText.includes('stori') ||
+        lowerText.includes('shart') ||
+        lowerText.includes('bajardim') ||
+        lowerText.includes('tekshir') ||
+        lowerText.includes('post') ||
+        lowerText.includes('kanal');
+
+      if (hasLink || mentionsVerification) {
+        logger.info(
+          { fromUserId: fromUser.id, chatId, textPreview: text.substring(0, 40) },
+          'Incoming business message identified as verification submission',
+        );
+
+        try {
+          const vResult = await verification.submitVerificationRequest({
+            telegramId: fromUser.id,
+            username: fromUser.username,
+            firstName: fromUser.first_name,
+            lastName: fromUser.last_name,
+            proofText: text,
+          });
+
+          await ctx.telegram.callApi('sendMessage', {
+            chat_id: chatId,
+            text: vResult.userMessage,
+            business_connection_id: connectionId,
+          } as never);
+          return;
+        } catch (vErr) {
+          logger.error({ error: vErr }, 'Failed to submit verification via business message');
+        }
+      }
 
       try {
         const result = await support.handleUserMessage({

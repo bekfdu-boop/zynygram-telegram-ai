@@ -224,9 +224,10 @@ ${request.proofText || '(Isbot matni yo‘q)'}`;
 
     for (const targetId of targets) {
       try {
-        await this.botInstance.telegram.sendMessage(targetId, alertText, keyboard);
+        const sent = await this.botInstance.telegram.sendMessage(targetId, alertText, keyboard);
+        logger.info({ targetId, messageId: sent.message_id }, 'Verification alert successfully sent to admin target');
       } catch (err) {
-        logger.warn({ targetId, error: err }, 'Failed to send verification alert to admin target');
+        logger.error({ targetId, error: err }, 'Failed to send verification alert to admin target');
       }
     }
   }

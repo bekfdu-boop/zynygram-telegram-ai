@@ -649,7 +649,7 @@ ${req.proofText}`;
       lowerText.includes('kanal');
 
     // Automatically submit verification request if it has a link or mentions verification conditions
-    if (!isAdmin && (hasLink || mentionsVerification)) {
+    if (hasLink || mentionsVerification) {
       const vResult = await verification.submitVerificationRequest({
         telegramId: fromUser.id,
         username: fromUser.username,
@@ -657,7 +657,7 @@ ${req.proofText}`;
         lastName: fromUser.last_name,
         proofText: text,
       });
-      await ctx.reply(vResult.userMessage, getUserMainMenu());
+      await ctx.reply(vResult.userMessage, isAdmin ? getAdminMainMenu() : getUserMainMenu());
       return;
     }
 
