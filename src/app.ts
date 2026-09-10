@@ -8,8 +8,13 @@ import { createServer, startServer, stopServer } from './server/server';
 async function bootstrap(): Promise<void> {
   logger.info({ nodeEnv: config.nodeEnv }, 'Starting Zynygram Telegram AI Support system...');
 
-  if (config.isProduction && !config.adminPassword) {
-    throw new Error('ADMIN_PANEL_PASSWORD must be configured in production');
+  if (config.isGeneratedAdminPassword) {
+    logger.warn('════════════════════════════════════════════════════════════════════════════');
+    logger.warn(`🔐 ADMIN PANEL TEMPORARY PASSWORD: ${config.adminPassword}`);
+    logger.warn('ℹ️  Tip: Set ADMIN_PANEL_PASSWORD in Railway variables for a permanent password.');
+    logger.warn('════════════════════════════════════════════════════════════════════════════');
+  } else {
+    logger.info('Admin panel authentication configured with custom password');
   }
 
   // 1. Load Knowledge Base
@@ -76,6 +81,11 @@ async function bootstrap(): Promise<void> {
 }
 
 bootstrap().catch((error) => {
-  logger.fatal({ error }, 'Fatal error during application bootstrap');
+  const errorMessage = error instanceof Error ? error.message : String(error);
+  const errorStack = error instanceof Error ? error.stack : undefined;
+  logger.fatal(
+    { err: error, error: errorMessage, stack: errorStack },
+    `Fatal error during application bootstrap: ${errorMessage}`,
+  );
   process.exit(1);
 });

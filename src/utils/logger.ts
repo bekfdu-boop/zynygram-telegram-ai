@@ -4,6 +4,10 @@ const isProduction = process.env.NODE_ENV === 'production';
 
 export const logger = pino({
   level: process.env.LOG_LEVEL || (isProduction ? 'info' : 'debug'),
+  serializers: {
+    err: pino.stdSerializers.err,
+    error: pino.stdSerializers.err,
+  },
   redact: {
     paths: [
       'req.headers.authorization',

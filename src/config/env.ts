@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import dotenv from 'dotenv';
 import { z } from 'zod';
 
@@ -80,6 +81,14 @@ const parseEnv = () => {
 // Parse environment variables
 const parsed = parseEnv();
 
+const configuredAdminPassword = parsed.ADMIN_PANEL_PASSWORD;
+const isGeneratedAdminPassword = !configuredAdminPassword && !process.env.VITEST;
+const adminPassword =
+  configuredAdminPassword ??
+  (process.env.VITEST
+    ? 'vitest-admin-password'
+    : crypto.randomBytes(16).toString('hex'));
+
 export const config = {
   botToken: parsed.BOT_TOKEN,
   ai: {
@@ -92,8 +101,8 @@ export const config = {
   adminIds: parsed.ADMIN_TELEGRAM_IDS,
   supportGroupId: parsed.SUPPORT_GROUP_ID,
   maxMessageLength: parsed.MAX_MESSAGE_LENGTH,
-  // A deterministic password is available only to the isolated Vitest process; production never has a default.
-  adminPassword: parsed.ADMIN_PANEL_PASSWORD ?? (process.env.VITEST ? 'vitest-admin-password' : undefined),
+  adminPassword,
+  isGeneratedAdminPassword,
   adminSessionTtlMs: parsed.ADMIN_SESSION_TTL_MS,
   nodeEnv: parsed.NODE_ENV,
   port: parsed.PORT,
