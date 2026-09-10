@@ -544,50 +544,74 @@ ${req.proofText}`;
   // VERIFICATION APPROVAL & REJECTION ACTIONS (Admin Interactive Buttons)
   // -------------------------------------------------------------
   bot.action(/^v_app:(.+)$/, async (ctx) => {
-    const fromId = ctx.from?.id?.toString();
-    const isAllowed = isSenderAdmin(fromId);
-    if (!isAllowed) {
-      await ctx.answerCbQuery(UNAUTHORIZED_ADMIN_MESSAGE, { show_alert: true });
-      return;
-    }
+    try {
+      const fromId = ctx.from?.id?.toString();
+      const isAllowed = isSenderAdmin(fromId);
+      if (!isAllowed) {
+        await ctx.answerCbQuery(UNAUTHORIZED_ADMIN_MESSAGE, { show_alert: true });
+        return;
+      }
 
-    const requestId = ctx.match[1];
-    const result = await verification.approveRequest(requestId, fromId || PRIMARY_ADMIN_TELEGRAM_ID);
+      const cbData = ctx.callbackQuery && 'data' in ctx.callbackQuery ? ctx.callbackQuery.data : '';
+      const requestId = (ctx.match && ctx.match[1]) || cbData.replace('v_app:', '');
+      logger.info({ fromId, requestId, cbData }, 'Executing v_app approval callback');
 
-    if (result.success) {
-      await ctx.answerCbQuery('✅ Foydalanuvchi tasdiqlandi!');
-      const adminName = ctx.from.username ? `@${ctx.from.username}` : ctx.from.first_name;
-      const originalText =
-        ctx.callbackQuery.message && 'text' in ctx.callbackQuery.message ? ctx.callbackQuery.message.text : '';
-      await ctx.editMessageText(
-        `${originalText}\n\n━━━━━━━━━━━━━━━━━━━━\n✅ TASDIQLANDI! (${adminName} tomonidan ma’qullandi va foydalanuvchiga tasdiqlanganlik xabari yuborildi)`,
-      );
-    } else {
-      await ctx.answerCbQuery('❌ Xatolik yuz berdi yoki allaqachon ko‘rib chiqilgan.', { show_alert: true });
+      const result = await verification.approveRequest(requestId, fromId || PRIMARY_ADMIN_TELEGRAM_ID);
+
+      if (result.success) {
+        await ctx.answerCbQuery('✅ Foydalanuvchi tasdiqlandi!');
+        const adminName = ctx.from?.username ? `@${ctx.from.username}` : ctx.from?.first_name || 'Admin';
+        const originalText =
+          ctx.callbackQuery && 'message' in ctx.callbackQuery && ctx.callbackQuery.message && 'text' in ctx.callbackQuery.message
+            ? ctx.callbackQuery.message.text
+            : '';
+        await ctx.editMessageText(
+          `${originalText}\n\n━━━━━━━━━━━━━━━━━━━━\n✅ TASDIQLANDI! (${adminName} tomonidan ma’qullandi va foydalanuvchiga tasdiqlanganlik xabari yuborildi)`,
+        );
+      } else {
+        await ctx.answerCbQuery('❌ Xatolik yuz berdi yoki allaqachon ko‘rib chiqilgan.', { show_alert: true });
+      }
+    } catch (err) {
+      logger.error({ error: err }, 'Unhandled error in v_app action');
+      try {
+        await ctx.answerCbQuery('❌ Xatolik yuz berdi.', { show_alert: true });
+      } catch {}
     }
   });
 
   bot.action(/^v_rej:(.+)$/, async (ctx) => {
-    const fromId = ctx.from?.id?.toString();
-    const isAllowed = isSenderAdmin(fromId);
-    if (!isAllowed) {
-      await ctx.answerCbQuery(UNAUTHORIZED_ADMIN_MESSAGE, { show_alert: true });
-      return;
-    }
+    try {
+      const fromId = ctx.from?.id?.toString();
+      const isAllowed = isSenderAdmin(fromId);
+      if (!isAllowed) {
+        await ctx.answerCbQuery(UNAUTHORIZED_ADMIN_MESSAGE, { show_alert: true });
+        return;
+      }
 
-    const requestId = ctx.match[1];
-    const result = await verification.rejectRequest(requestId, fromId || PRIMARY_ADMIN_TELEGRAM_ID);
+      const cbData = ctx.callbackQuery && 'data' in ctx.callbackQuery ? ctx.callbackQuery.data : '';
+      const requestId = (ctx.match && ctx.match[1]) || cbData.replace('v_rej:', '');
+      logger.info({ fromId, requestId, cbData }, 'Executing v_rej rejection callback');
 
-    if (result.success) {
-      await ctx.answerCbQuery('❌ So‘rov rad etildi');
-      const adminName = ctx.from.username ? `@${ctx.from.username}` : ctx.from.first_name;
-      const originalText =
-        ctx.callbackQuery.message && 'text' in ctx.callbackQuery.message ? ctx.callbackQuery.message.text : '';
-      await ctx.editMessageText(
-        `${originalText}\n\n━━━━━━━━━━━━━━━━━━━━\n❌ RAD ETILDI (${adminName} tomonidan rad etildi va foydalanuvchiga xabar yuborildi)`,
-      );
-    } else {
-      await ctx.answerCbQuery('❌ Xatolik yuz berdi.', { show_alert: true });
+      const result = await verification.rejectRequest(requestId, fromId || PRIMARY_ADMIN_TELEGRAM_ID);
+
+      if (result.success) {
+        await ctx.answerCbQuery('❌ So‘rov rad etildi');
+        const adminName = ctx.from?.username ? `@${ctx.from.username}` : ctx.from?.first_name || 'Admin';
+        const originalText =
+          ctx.callbackQuery && 'message' in ctx.callbackQuery && ctx.callbackQuery.message && 'text' in ctx.callbackQuery.message
+            ? ctx.callbackQuery.message.text
+            : '';
+        await ctx.editMessageText(
+          `${originalText}\n\n━━━━━━━━━━━━━━━━━━━━\n❌ RAD ETILDI (${adminName} tomonidan rad etildi va foydalanuvchiga xabar yuborildi)`,
+        );
+      } else {
+        await ctx.answerCbQuery('❌ Xatolik yuz berdi.', { show_alert: true });
+      }
+    } catch (err) {
+      logger.error({ error: err }, 'Unhandled error in v_rej action');
+      try {
+        await ctx.answerCbQuery('❌ Xatolik yuz berdi.', { show_alert: true });
+      } catch {}
     }
   });
 
