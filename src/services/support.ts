@@ -99,6 +99,19 @@ export class SupportService {
       };
     }
 
+    const lower = trimmedInput.toLowerCase().trim();
+
+    // Check if user wants to switch back to AI mode
+    const isResetToAI = ['/ai', '/start', '/reset', 'ai', 'bot', 'bosh menyu', 'qaytish'].includes(lower);
+    if (isResetToAI && conversation.status === ConversationStatus.WAITING_HUMAN) {
+      await this.conversations.updateStatus(conversation.id, ConversationStatus.AI_HANDLED);
+      return {
+        replyText: '🤖 AI yordamchi qayta faollashtirildi. Zynygram bo‘yicha savolingizni bemalol yozishingiz mumkin!',
+        escalatedToHuman: false,
+        status: ConversationStatus.AI_HANDLED,
+      };
+    }
+
     // 7. Check human escalation status
     // If conversation is already in WAITING_HUMAN, do not generate automatic AI responses
     if (conversation.status === ConversationStatus.WAITING_HUMAN) {
@@ -107,14 +120,14 @@ export class SupportService {
         'Conversation is in WAITING_HUMAN status, skipping AI response generation',
       );
       return {
-        replyText: 'Sizning murojaatingiz operator navbatida turibdi. Iltimos, operator javobini kuting.',
+        replyText:
+          'Sizning murojaatingiz operator navbatida turibdi. Iltimos, operator javobini kuting.\n\nAgar yana AI yordamchi bilan muloqot qilmoqchi bo‘lsangiz: /ai buyrug‘ini yuboring.',
         escalatedToHuman: true,
         status: ConversationStatus.WAITING_HUMAN,
       };
     }
 
     // Check if the user is explicitly requesting a human operator in text
-    const lower = trimmedInput.toLowerCase();
     const explicitHumanPhrases = [
       'operator',
       'inson',

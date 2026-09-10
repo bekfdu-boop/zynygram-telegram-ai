@@ -53,18 +53,44 @@ export function registerBotHandlers(
     const fromUser = ctx.from;
     if (fromUser) {
       try {
-        await users.getOrCreateUser({
+        const user = await users.getOrCreateUser({
           telegramId: fromUser.id,
           username: fromUser.username,
           firstName: fromUser.first_name,
           lastName: fromUser.last_name,
           language: fromUser.language_code,
         });
+        const activeConv = await conversations.getOrCreateActiveConversation(user.id);
+        if (activeConv.status === ConversationStatus.WAITING_HUMAN) {
+          await conversations.updateStatus(activeConv.id, ConversationStatus.AI_HANDLED);
+        }
       } catch (err) {
         logger.error({ error: err }, 'Failed to persist user on /start command');
       }
     }
     await ctx.reply(START_MESSAGE);
+  });
+
+  // /ai command (Switch back to AI from operator queue)
+  bot.command(['ai', 'reset'], async (ctx) => {
+    const fromUser = ctx.from;
+    if (!fromUser) return;
+
+    try {
+      const user = await users.getOrCreateUser({
+        telegramId: fromUser.id,
+        username: fromUser.username,
+        firstName: fromUser.first_name,
+        lastName: fromUser.last_name,
+      });
+
+      const activeConv = await conversations.getOrCreateActiveConversation(user.id);
+      await conversations.updateStatus(activeConv.id, ConversationStatus.AI_HANDLED);
+      await ctx.reply('🤖 AI yordamchi qayta faollashtirildi. Zynygram bo‘yicha savolingizni bemalol yozishingiz mumkin!');
+    } catch (err) {
+      logger.error({ error: err }, 'Failed to reset conversation to AI');
+      await ctx.reply('🤖 AI yordamchi tayyor. Savolingizni yozishingiz mumkin.');
+    }
   });
 
   // /help command
