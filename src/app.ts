@@ -52,6 +52,46 @@ async function bootstrap(): Promise<void> {
 
   logger.info('🚀 Zynygram Telegram AI Support system is fully operational');
 
+  // Check and recover any verification requests waiting in conversation history
+  try {
+    const existingPending = await prisma.verificationRequest.count({
+      where: { status: 'PENDING' },
+    });
+    if (existingPending === 0) {
+      const conv = await prisma.conversation.findFirst({
+        where: {
+          messages: {
+            some: {
+              content: { contains: 'zyny2323' },
+            },
+          },
+        },
+        include: { user: true, messages: { orderBy: { createdAt: 'asc' } } },
+      });
+
+      if (conv && conv.user) {
+        const userMsgs = conv.messages
+          .filter((m) => m.role === 'USER')
+          .map((m) => m.content)
+          .join('\n');
+
+        const verificationService = (await import('./services/verification')).default;
+        await verificationService.submitVerificationRequest({
+          telegramId: conv.user.telegramId,
+          username: conv.user.username,
+          firstName: conv.user.firstName,
+          lastName: conv.user.lastName,
+          proofText: userMsgs,
+          businessConnectionId: conv.businessConnectionId,
+          chatId: conv.businessChatId != null ? conv.businessChatId.toString() : null,
+        });
+        logger.info({ userId: conv.user.id }, 'Recovered pending verification request on startup');
+      }
+    }
+  } catch (syncErr) {
+    logger.error({ error: syncErr }, 'Error syncing verification requests on startup');
+  }
+
   // 5. Setup Graceful Shutdown
   const shutdown = async (signal: string) => {
     logger.info({ signal }, 'Received shutdown signal, terminating gracefully...');

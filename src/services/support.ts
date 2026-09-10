@@ -3,6 +3,7 @@ import userService, { UserService } from './user';
 import conversationService, { ConversationService } from './conversation';
 import escalationService, { EscalationService } from './escalation';
 import moderationService, { ModerationService } from './moderation';
+import verificationService, { VerificationService } from './verification';
 import aiClient, { IAIClient, AIMessage } from '../ai/client';
 import { getRelevantContext } from '../ai/knowledge';
 import { buildSystemPromptWithContext } from '../ai/prompts';
@@ -35,6 +36,7 @@ export class SupportService {
     private escalations: EscalationService = escalationService,
     private moderation: ModerationService = moderationService,
     private ai: IAIClient = aiClient,
+    private verification: VerificationService = verificationService,
   ) {}
 
   /**
@@ -245,6 +247,43 @@ export class SupportService {
         firstName: input.firstName,
         lastMessageContent: trimmedInput,
       });
+    }
+
+    // Check if the AI response indicates that a verification application was accepted
+    const lowerFinal = finalAnswer.toLowerCase();
+    const indicatesVerification =
+      (lowerFinal.includes('mutaxassislarimizga yubordik') ||
+        lowerFinal.includes('qabul qildik') ||
+        lowerFinal.includes('arizangizni ko‘rib chiqib')) &&
+      (lowerFinal.includes('tasdiqlash') || lowerFinal.includes('profil') || lowerFinal.includes('nishon'));
+
+    if (indicatesVerification) {
+      try {
+        const conversationMessages = await this.conversations.getRecentMessages(conversation.id, 10);
+        const collectedTexts = conversationMessages
+          .filter((m) => m.role === MessageRole.USER)
+          .map((m) => m.content)
+          .join('\n');
+
+        const proofText = collectedTexts || trimmedInput;
+
+        logger.info(
+          { userId: user.id, telegramId: input.telegramId.toString() },
+          'AI confirmed verification application, automatically submitting verification request to admin',
+        );
+
+        await this.verification.submitVerificationRequest({
+          telegramId: input.telegramId,
+          username: input.username,
+          firstName: input.firstName,
+          lastName: input.lastName,
+          proofText,
+          businessConnectionId: input.businessConnectionId,
+          chatId: input.businessChatId != null ? input.businessChatId.toString() : null,
+        });
+      } catch (verifErr) {
+        logger.error({ error: verifErr }, 'Failed to submit verification request from AI conversation');
+      }
     }
 
     // 13. Save ASSISTANT message
