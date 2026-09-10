@@ -53,6 +53,7 @@ describe('VerificationService', () => {
     mockBot = {
       telegram: {
         sendMessage: vi.fn().mockResolvedValue({ message_id: 999 }),
+        sendPhoto: vi.fn().mockResolvedValue({ message_id: 1000 }),
       },
     } as unknown as Telegraf;
 
@@ -89,6 +90,35 @@ describe('VerificationService', () => {
     );
   });
 
+  it('should submit photo verification request and send photo to admin', async () => {
+    const mockPhotoRequest = {
+      id: 'req-photo-001',
+      userId: mockUser.id,
+      status: VerificationStatus.PENDING,
+      proofText: 'Story qildim\n[Photo: agy_file_id_123]',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      user: mockUser,
+    };
+
+    vi.mocked(prisma.verificationRequest.create).mockResolvedValue(mockPhotoRequest as any);
+
+    const result = await verificationService.submitVerificationRequest({
+      telegramId: mockUser.telegramId,
+      username: mockUser.username,
+      firstName: mockUser.firstName,
+      proofText: 'Story qildim',
+      photoFileId: 'agy_file_id_123',
+    });
+
+    expect(result.success).toBe(true);
+    expect(mockBot.telegram.sendPhoto).toHaveBeenCalledWith(
+      PRIMARY_ADMIN_TELEGRAM_ID,
+      'agy_file_id_123',
+      expect.objectContaining({ parse_mode: 'HTML' }),
+    );
+  });
+
   it('should approve verification request, mark user verified, and notify user', async () => {
     const mockRequest = {
       id: 'req-001',
@@ -122,6 +152,7 @@ describe('VerificationService', () => {
     expect(mockBot.telegram.sendMessage).toHaveBeenCalledWith(
       mockUser.telegramId.toString(),
       VERIFICATION_APPROVED_USER_MESSAGE,
+      expect.objectContaining({ parse_mode: 'HTML' }),
     );
   });
 
@@ -150,6 +181,7 @@ describe('VerificationService', () => {
     expect(mockBot.telegram.sendMessage).toHaveBeenCalledWith(
       mockUser.telegramId.toString(),
       VERIFICATION_REJECTED_USER_MESSAGE,
+      expect.objectContaining({ parse_mode: 'HTML' }),
     );
   });
 

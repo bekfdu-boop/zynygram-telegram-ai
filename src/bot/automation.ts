@@ -61,8 +61,10 @@ export function registerChatAutomationHandlers(
       const fromUser = msg.from;
       const text = typeof msg.text === 'string' ? msg.text : undefined;
       const chatId = msg.chat?.id;
+      const photoArray = (msg as { photo?: Array<{ file_id: string }> }).photo;
+      const caption = (msg as { caption?: string }).caption;
 
-      if (!fromUser || !text || !chatId) {
+      if (!fromUser || !chatId || (!text && !photoArray)) {
         return;
       }
 
@@ -71,9 +73,39 @@ export function registerChatAutomationHandlers(
           connectionId,
           fromUserId: fromUser.id,
           chatId,
+          hasPhoto: !!photoArray,
         },
         'Received automated business message via Telegram Chat Automation',
       );
+
+      // Handle photo proof submission in business chat
+      if (photoArray && photoArray.length > 0) {
+        const photoFileId = photoArray[photoArray.length - 1].file_id;
+        try {
+          const vResult = await verification.submitVerificationRequest({
+            telegramId: fromUser.id,
+            username: fromUser.username,
+            firstName: fromUser.first_name,
+            lastName: fromUser.last_name,
+            proofText: caption || '📸 Foydalanuvchi skrinshot yubordi',
+            photoFileId,
+          });
+
+          await ctx.telegram.callApi('sendMessage', {
+            chat_id: chatId,
+            text: vResult.userMessage,
+            parse_mode: 'HTML',
+            business_connection_id: connectionId,
+          } as never);
+          return;
+        } catch (vErr) {
+          logger.error({ error: vErr }, 'Failed to submit verification photo via business message');
+        }
+      }
+
+      if (!text) {
+        return;
+      }
 
       // Check if incoming business message is a verification link or proof submission
       const hasLink =
@@ -117,6 +149,7 @@ export function registerChatAutomationHandlers(
           await ctx.telegram.callApi('sendMessage', {
             chat_id: chatId,
             text: vResult.userMessage,
+            parse_mode: 'HTML',
             business_connection_id: connectionId,
           } as never);
           return;

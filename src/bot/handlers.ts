@@ -18,59 +18,75 @@ import { ConversationStatus } from '@prisma/client';
 import config from '../config/env';
 import logger from '../utils/logger';
 
-export const VERIFY_INFO_MESSAGE = `🛡 Zynygram Tasdiqlash Nishonini Olish Shartlari:
+export const VERIFY_INFO_MESSAGE = `🛡 <b>Zynygram Tasdiqlash Nishonini Olish Shartlari:</b>
 
-Rasmiy tasdiqlash nishonini (ko‘k belgi) olish uchun quyidagi 2 ta rasmiy shartdan birini bajaring:
+Rasmiy tasdiqlash nishonini (<i>ko‘k belgi</i>) olish uchun quyidagi <b>2 ta rasmiy shartdan birini</b> bajaring:
 
-1️⃣ 1-variant (Instagram yoki Telegram Story / Reels):
-Rasmiy https://t.me/Zynygram_media/2 postimizni Instagram yoki Telegram profilingizda Story yoki Reels qilib ulashing.
+1️⃣ <b>1-variant</b> <i>(Instagram yoki Telegram Story / Reels):</i>
+Rasmiy https://t.me/Zynygram_media/2 postimizni Instagram yoki Telegram profilingizda <b>Story yoki Reels</b> qilib ulashing. 📱
 
-2️⃣ 2-variant (Telegram kanallarda tarqatish):
-YOKI rasmiy https://t.me/zynygram/21 postimizni Telegram kanallarda tarqating.
+2️⃣ <b>2-variant</b> <i>(Telegram kanallarda tarqatish):</i>
+YOKI rasmiy https://t.me/zynygram/21 postimizni <b>Telegram kanallarida</b> tarqating. 📢
 
-✨ Shartni bajargach:
-Postingiz yoki kanalingiz havolasini (linkini) to‘g‘ridan-to‘g‘ri shu yerga yozib yuboring. Mutaxassislarimiz tez orada ko‘rib chiqib, profilingizni tasdiqlashadi!`;
+━━━━━━━━━━━━━━━━━━━━
+✨ <b>Shartni bajargach, quyidagilarni yuboring:</b>
+1. <b>Zynygram profilingiz nomini (username / nikini)</b>; 📱
+2. Postingiz havolasini (linkini) yoki <b>skrinshotini (rasmini)</b>. 📸
 
-export const START_MESSAGE = `Assalomu alaykum! Xush kelibsiz! 👋
+<i>Masalan: "Zynygram nikim: @shaxzod, shartni bajardim..." (yoki skrinshot bilan).</i>
 
-Zynygram rasmiy mijozlar bilan ishlash bo‘limi sizga yordam berishga tayyor.
+Mutaxassislarimiz arizangizni ko‘rib chiqib, profilingizni darhol tasdiqlashadi! 🛡✨`;
 
-Akkaunt sozlamalari, tasdiqlash nishonini olish, taklif va mulohazalar yoki ilovadagi istalgan masala bo‘yicha sizni tinglaymiz.
+export const START_MESSAGE = `✨ <b>Assalomu alaykum! Xush kelibsiz!</b> 👋
 
-Quyidagi menyudan kerakli bo‘limni tanlashingiz yoki savolingizni to‘g‘ridan-to‘g‘ri yozib qoldirishingiz mumkin:`;
+<b>Zynygram</b> rasmiy mijozlar bilan ishlash xizmati sizga yordam berishga tayyor. 🌟
 
-export const ADMIN_START_MESSAGE = `👋 Xush kelibsiz, Administrator!
+Akkaunt sozlamalari, <b>tasdiqlash nishonini olish</b>, taklif va mulohazalar yoki ilovadagi istalgan masala bo‘yicha sizni <i>mamnuniyat bilan</i> tinglaymiz. 🤝
 
-Zynygram boshqaruv panelidasiz.
-Quyidagi menyu orqali taklif va murojaatlarni kuzatib borishingiz, verifikatsiya statistikasini ko‘rishingiz va arizalarni tasdiqlashingiz yoki rad etishingiz mumkin:`;
+Quyidagi menyudan kerakli bo‘limni tanlashingiz yoki savolingizni to‘g‘ridan-to‘g‘ri yozib qoldirishingiz mumkin: ⬇️`;
 
-export const FEEDBACK_PROMPT_MESSAGE = `✍️ Zynygram loyihasini rivojlantirish bo‘yicha taklifingiz yoki ilovada duch kelgan biror muammoingiz bo‘lsa, uni batafsil yozib qoldiring.
+export const ADMIN_START_MESSAGE = `👋 <b>Xush kelibsiz, Administrator!</b> 🌟
 
-Har bir murojaat ma’muriyatimiz tomonidan diqqat bilan ko‘rib chiqiladi!`;
+Siz <b>Zynygram</b> rasmiy boshqaruv panelidasiz. 🛡
+Quyidagi menyu orqali taklif va murojaatlarni kuzatib borishingiz, verifikatsiya statistikasini ko‘rishingiz hamda arizalarni tasdiqlashingiz yoki rad etishingiz mumkin: ⬇️`;
 
-export const ABOUT_MESSAGE = `ℹ️ Zynygram haqida qisqacha:
+export const FEEDBACK_PROMPT_MESSAGE = `✍️ <b>Zynygram loyihasini rivojlantirish bo‘yicha taklif yoki muammo bildirish:</b> 🌟
 
-Zynygram — zamonaviy O‘zbekiston ijtimoiy tarmog‘i bo‘lib, unda:
-• Do‘stlar orttirishingiz, postlar va media kontentlar ulashishingiz;
-• Sun’iy intellekt (AI) vositalari orqali professional rasm va video generatsiya qilishingiz;
-• O‘z shaxsiy kanallaringiz va guruhlaringizni yuritishingiz mumkin.
+Sizning har bir fikringiz biz uchun juda qadrli! 💡
 
-Savollaringiz yoki takliflaringiz bo‘lsa, bemalol yozib qoldirishingiz mumkin!`;
+Iltimos, taklifingiz yoki ilovada duch kelgan texnik muammoingizni <b>batafsil yozib qoldiring</b> <i>(xohlasangiz skrinshot ham ilova qilishingiz mumkin)</i>. 📝
 
-export const HELP_MESSAGE = `ℹ️ Zynygram Qo‘llab-quvvatlash Xizmati:
+Xabaringiz zudlik bilan ma’muriyatimiz va dasturchilar guruhimizga yetkaziladi! 🤝✨`;
 
-Pastdagi qulay menyudan foydalanishingiz yoki savolingizni to‘g‘ridan-to‘g‘ri matn ko‘rinishida yozishingiz mumkin.
+export const FEEDBACK_RECEIVED_MESSAGE = `🌟 <b>Katta rahmat!</b>
 
-Eslatma: Xavfsizlik yuzasidan shaxsiy parollaringiz yoki SMS tasdiqlash kodlarini hech kimga yubormang!`;
+Siz bildirgan taklif yoki muammo <i>ma’muriyatimiz va dasturchilar jamoamizga</i> yetkazildi. 🤝
 
-export const SUPPORT_MESSAGE = `🤝 Zynygram Qo‘llab-quvvatlash Xizmati
+<b>Zynygram</b> platformasini yanada mukammal qilishga hissa qo‘shayotganingiz uchun minnatdormiz! ✨`;
 
-Biz ijtimoiy tarmoqdan foydalanish, profil sozlamalari, postlar, media yuklash hamda rasm va video yaratish vositalari bo‘yicha yordam beramiz.
+export const ABOUT_MESSAGE = `ℹ️ <b>Zynygram haqida qisqacha:</b> 🌟
 
-Savolingizni to‘g‘ridan-to‘g‘ri yozib qoldirishingiz mumkin.`;
+<b>Zynygram</b> — zamonaviy O‘zbekiston ijtimoiy tarmog‘i bo‘lib, unda:
+• Do‘stlar orttirishingiz, postlar va media kontentlar ulashishingiz; 👥
+• <b>Sun’iy intellekt (AI)</b> vositalari orqali professional rasm va video generatsiya qilishingiz; 🎨
+• O‘z shaxsiy kanallaringiz va guruhlaringizni yuritishingiz mumkin. 📢
+
+Savollaringiz yoki takliflaringiz bo‘lsa, <i>bemalol yozib qoldirishingiz mumkin!</i> 🤝✨`;
+
+export const HELP_MESSAGE = `ℹ️ <b>Zynygram Qo‘llab-quvvatlash Xizmati:</b>
+
+Pastdagi qulay menyudan foydalanishingiz yoki savolingizni to‘g‘ridan-to‘g‘ri matn ko‘rinishida yozishingiz mumkin. 💬
+
+⚠️ <i>Eslatma: Xavfsizlik yuzasidan shaxsiy parollaringiz yoki SMS tasdiqlash kodlarini hech kimga bermang!</i>`;
+
+export const SUPPORT_MESSAGE = `🤝 <b>Zynygram Qo‘llab-quvvatlash Xizmati</b> 🌟
+
+Biz ijtimoiy tarmoqdan foydalanish, profil sozlamalari, postlar, media yuklash hamda rasm va video yaratish vositalari bo‘yicha sizga <i>chin dildan</i> yordam beramiz. 🛡
+
+Savolingizni to‘g‘ridan-to‘g‘ri yozib qoldirishingiz mumkin. ✍️`;
 
 export const UNSUPPORTED_CONTENT_MESSAGE =
-  'Hozircha ushbu turdagi xabarni qabul qila olmaymiz. Iltimos, xabaringiz yoki havolangizni matn ko‘rinishida yuboring.';
+  'Hozircha ushbu turdagi xabarni qabul qila olmaymiz. Iltimos, xabaringiz yoki havolangizni <b>matn yoki rasm (skrinshot)</b> ko‘rinishida yuboring. 📸';
 
 export const UNAUTHORIZED_ADMIN_MESSAGE = 'Bu amal faqat administratorlar uchun.';
 
@@ -102,11 +118,11 @@ export function registerBotHandlers(
         lastName: fromUser.last_name,
         proofText: args,
       });
-      await ctx.reply(res.userMessage, getUserMainMenu());
+      await ctx.reply(res.userMessage, { parse_mode: 'HTML', ...getUserMainMenu() });
       return;
     }
 
-    await ctx.reply(VERIFY_INFO_MESSAGE, getUserMainMenu());
+    await ctx.reply(VERIFY_INFO_MESSAGE, { parse_mode: 'HTML', ...getUserMainMenu() });
   });
 
   // /start command
@@ -131,11 +147,11 @@ export function registerBotHandlers(
     }
 
     if (isSenderAdmin(fromUser?.id)) {
-      await ctx.reply(ADMIN_START_MESSAGE, getAdminMainMenu());
+      await ctx.reply(ADMIN_START_MESSAGE, { parse_mode: 'HTML', ...getAdminMainMenu() });
       return;
     }
 
-    await ctx.reply(START_MESSAGE, getUserMainMenu());
+    await ctx.reply(START_MESSAGE, { parse_mode: 'HTML', ...getUserMainMenu() });
   });
 
   // /ai or /reset command
@@ -153,21 +169,27 @@ export function registerBotHandlers(
 
       const activeConv = await conversations.getOrCreateActiveConversation(user.id);
       await conversations.updateStatus(activeConv.id, ConversationStatus.AI_HANDLED);
-      await ctx.reply('Assalomu alaykum! Xizmatimiz yana faol. Savolingiz yoki murojaatingizni bemalol yozishingiz mumkin!', getUserMainMenu());
+      await ctx.reply(
+        'Assalomu alaykum! Xizmatimiz yana faol. Savolingiz yoki murojaatingizni <i>bemalol yozishingiz mumkin!</i> 🤝✨',
+        { parse_mode: 'HTML', ...getUserMainMenu() },
+      );
     } catch (err) {
       logger.error({ error: err }, 'Failed to reset conversation');
-      await ctx.reply('Sizni tinglayapmiz. Savolingizni yozishingiz mumkin.', getUserMainMenu());
+      await ctx.reply('Sizni tinglayapmiz. Savolingizni yozishingiz mumkin. 🤝', getUserMainMenu());
     }
   });
 
   // /help command
   bot.command('help', async (ctx) => {
-    await ctx.reply(HELP_MESSAGE, isSenderAdmin(ctx.from?.id) ? getAdminMainMenu() : getUserMainMenu());
+    await ctx.reply(HELP_MESSAGE, {
+      parse_mode: 'HTML',
+      ...(isSenderAdmin(ctx.from?.id) ? getAdminMainMenu() : getUserMainMenu()),
+    });
   });
 
   // /support command
   bot.command('support', async (ctx) => {
-    await ctx.reply(SUPPORT_MESSAGE, getUserMainMenu());
+    await ctx.reply(SUPPORT_MESSAGE, { parse_mode: 'HTML', ...getUserMainMenu() });
   });
 
   // /human command (Human Escalation)
@@ -202,7 +224,7 @@ export function registerBotHandlers(
 
     const user = await users.findByTelegramId(fromUser.id);
     if (!user) {
-      await ctx.reply('Sizda hozircha faol murojaat yo‘q. Savolingizni yozib qoldirishingiz mumkin.', getUserMainMenu());
+      await ctx.reply('Sizda hozircha faol murojaat yo‘q. Savolingizni yozib qoldirishingiz mumkin. 🤝', getUserMainMenu());
       return;
     }
 
@@ -220,8 +242,8 @@ export function registerBotHandlers(
     }
 
     await ctx.reply(
-      `📋 Murojaatingiz holati:\n\nID: ${activeConv.id}\nHolat: ${statusText}\nBoshlangan vaqti: ${activeConv.createdAt.toLocaleString('uz-UZ')}`,
-      getUserMainMenu(),
+      `📋 <b>Murojaatingiz holati:</b>\n\n🆔 <b>ID:</b> <code>${activeConv.id}</code>\n📊 <b>Holat:</b> ${statusText}\n🕒 <b>Boshlangan vaqti:</b> ${activeConv.createdAt.toLocaleString('uz-UZ')}`,
+      { parse_mode: 'HTML', ...getUserMainMenu() },
     );
   });
 
@@ -229,11 +251,11 @@ export function registerBotHandlers(
   // USER MENU BUTTON LISTENERS
   // -------------------------------------------------------------
   bot.hears(USER_MENU_BUTTONS.VERIFY, async (ctx) => {
-    await ctx.reply(VERIFY_INFO_MESSAGE, getUserMainMenu());
+    await ctx.reply(VERIFY_INFO_MESSAGE, { parse_mode: 'HTML', ...getUserMainMenu() });
   });
 
   bot.hears(USER_MENU_BUTTONS.FEEDBACK, async (ctx) => {
-    await ctx.reply(FEEDBACK_PROMPT_MESSAGE, getUserMainMenu());
+    await ctx.reply(FEEDBACK_PROMPT_MESSAGE, { parse_mode: 'HTML', ...getUserMainMenu() });
   });
 
   bot.hears(USER_MENU_BUTTONS.OPERATOR, async (ctx) => {
@@ -260,7 +282,7 @@ export function registerBotHandlers(
   });
 
   bot.hears(USER_MENU_BUTTONS.ABOUT, async (ctx) => {
-    await ctx.reply(ABOUT_MESSAGE, getUserMainMenu());
+    await ctx.reply(ABOUT_MESSAGE, { parse_mode: 'HTML', ...getUserMainMenu() });
   });
 
   // -------------------------------------------------------------
@@ -275,22 +297,22 @@ export function registerBotHandlers(
       verification.getVerificationStats(),
     ]);
 
-    const report = `📊 Zynygram Tizimining Umumiy Statistikasi:
+    const report = `📊 <b>Zynygram Tizimining Umumiy Statistikasi:</b> 🌟
 
-👥 Jami foydalanuvchilar: ${userCount}
-💬 Jami suhbatlar: ${convStats.total}
-🟢 Ochiq suhbatlar: ${convStats.open}
-⏳ Navbatda kutayotganlar: ${convStats.waitingHuman}
-✅ Yopilgan suhbatlar: ${convStats.closed}
+👥 <b>Jami foydalanuvchilar:</b> ${userCount} ta
+💬 <b>Jami suhbatlar:</b> ${convStats.total} ta
+🟢 <b>Ochiq suhbatlar:</b> ${convStats.open} ta
+⏳ <b>Navbatda kutayotganlar:</b> ${convStats.waitingHuman} ta
+✅ <b>Yopilgan suhbatlar:</b> ${convStats.closed} ta
 
 ━━━━━━━━━━━━━━━━━━━━
-🛡 Tasdiqlash (Verifikatsiya) arizalari:
-📥 Jami kelgan so‘rovlar: ${vStats.total}
-⏳ Kutilayotgan (yangi): ${vStats.pending}
-✅ Tasdiqlangan: ${vStats.approved}
-❌ Rad etilgan: ${vStats.rejected}`;
+🛡 <b>Tasdiqlash (Verifikatsiya) arizalari:</b>
+📥 <b>Jami kelgan so‘rovlar:</b> ${vStats.total} ta
+⏳ <b>Kutilayotgan (yangi):</b> ${vStats.pending} ta
+✅ <b>Tasdiqlangan:</b> ${vStats.approved} ta
+❌ <b>Rad etilgan:</b> ${vStats.rejected} ta`;
 
-    await ctx.reply(report, getAdminMainMenu());
+    await ctx.reply(report, { parse_mode: 'HTML', ...getAdminMainMenu() });
   });
 
   bot.hears(ADMIN_MENU_BUTTONS.VERIFICATION_STATS, async (ctx) => {
@@ -298,16 +320,16 @@ export function registerBotHandlers(
 
     const vStats = await verification.getVerificationStats();
 
-    const report = `🛡 VERIFIKATSIYA (TASDIQLASH NISHONI) HISOBOTI:
+    const report = `🛡 <b>VERIFIKATSIYA (TASDIQLASH NISHONI) HISOBOTI:</b> 🌟
 
-📥 Jami kelgan arizalar: ${vStats.total} ta
-⏳ Ko‘rib chiqilishi kerak (kutilayotgan): ${vStats.pending} ta
-✅ Muvaffaqiyatli tasdiqlangan: ${vStats.approved} ta
-❌ Rad etilgan arizalar: ${vStats.rejected} ta
+📥 <b>Jami kelgan arizalar:</b> ${vStats.total} ta
+⏳ <b>Ko‘rib chiqilishi kerak (kutilayotgan):</b> ${vStats.pending} ta
+✅ <b>Muvaffaqiyatli tasdiqlangan:</b> ${vStats.approved} ta
+❌ <b>Rad etilgan arizalar:</b> ${vStats.rejected} ta
 
-💡 "⏳ Kutilayotgan arizalar" tugmasi orqali yangi kelgan har bir arizani tekshirib, darhol tasdiqlashingiz yoki rad etishingiz mumkin.`;
+💡 <i>"⏳ Kutilayotgan arizalar" tugmasi orqali yangi arizalarni skrinshotlari bilan ko‘rib chiqib, darhol tasdiqlashingiz yoki rad etishingiz mumkin.</i>`;
 
-    await ctx.reply(report, getAdminMainMenu());
+    await ctx.reply(report, { parse_mode: 'HTML', ...getAdminMainMenu() });
   });
 
   bot.hears(ADMIN_MENU_BUTTONS.PENDING_VERIFICATIONS, async (ctx) => {
@@ -315,24 +337,39 @@ export function registerBotHandlers(
 
     const pending = await verification.getPendingRequests(10);
     if (pending.length === 0) {
-      await ctx.reply('✅ Hozirda yangi kutilayotgan tasdiqlash arizalari yo‘q. Barcha arizalar ko‘rib chiqilgan!', getAdminMainMenu());
+      await ctx.reply('✅ <b>Hozirda yangi kutilayotgan tasdiqlash arizalari yo‘q.</b>\n\nBarcha arizalar ko‘rib chiqilgan! 🌟', {
+        parse_mode: 'HTML',
+        ...getAdminMainMenu(),
+      });
       return;
     }
 
-    await ctx.reply(`⏳ Hozirda kutilayotgan arizalar (${pending.length} ta):`, getAdminMainMenu());
+    await ctx.reply(`⏳ <b>Ko‘rib chiqilishi kutilayotgan arizalar (${pending.length} ta):</b>`, {
+      parse_mode: 'HTML',
+      ...getAdminMainMenu(),
+    });
 
     for (const req of pending) {
       const userHandle = req.user.username
         ? `@${req.user.username}`
         : req.user.firstName || 'Nomsiz foydalanuvchi';
 
-      const itemText = `🛡 ARIZA:
-Foydalanuvchi: ${userHandle}
-Telegram ID: ${req.user.telegramId.toString()}
-Vaqt: ${req.createdAt.toLocaleString('uz-UZ')}
+      const photoMatch = req.proofText?.match(/\[Photo:\s*([^\]]+)\]/);
+      const cleanProof = req.proofText ? req.proofText.replace(/\[Photo:\s*[^\]]+\]/, '').trim() : '';
 
-Yuborilgan Isbot:
-${req.proofText}`;
+      const customNikMatch = cleanProof.match(/(?:nik|username|profil|login|nomi)[\s:]*@?([a-zA-Z0-9_.]{3,30})/i);
+      const atUsernameMatch = cleanProof.match(/@([a-zA-Z0-9_.]{3,30})/);
+      const detectedUsername = customNikMatch ? customNikMatch[1] : (atUsernameMatch ? atUsernameMatch[1] : null);
+      const zynygramDisplay = detectedUsername ? `<code>@${detectedUsername}</code>` : '⚠️ <i>(Xabar/rasmdan qarang)</i>';
+
+      const itemText = `🛡 <b>ARIZA:</b>
+👤 <b>Telegram profili:</b> ${userHandle}
+🆔 <b>Telegram ID:</b> <code>${req.user.telegramId.toString()}</code>
+📱 <b>Zynygram Profili:</b> ${zynygramDisplay}
+🕒 <b>Vaqt:</b> ${req.createdAt.toLocaleString('uz-UZ')}
+
+📝 <b>Yuborilgan Isbot:</b>
+${cleanProof || (photoMatch ? '📸 <i>(Skrinshot ilova qilingan)</i>' : '<i>(Isbot matni yo‘q)</i>')}`;
 
       const keyboard = Markup.inlineKeyboard([
         [
@@ -341,7 +378,23 @@ ${req.proofText}`;
         ],
       ]);
 
-      await ctx.reply(itemText, keyboard);
+      if (photoMatch) {
+        try {
+          await ctx.replyWithPhoto(photoMatch[1], {
+            caption: itemText,
+            parse_mode: 'HTML',
+            reply_markup: keyboard.reply_markup,
+          });
+          continue;
+        } catch {
+          // fallback to text
+        }
+      }
+
+      await ctx.reply(itemText, {
+        parse_mode: 'HTML',
+        reply_markup: keyboard.reply_markup,
+      });
     }
   });
 
@@ -350,7 +403,7 @@ ${req.proofText}`;
 
     const inquiries = await conversations.getRecentInquiries(10);
     if (inquiries.length === 0) {
-      await ctx.reply('Hozircha hech qanday murojaat yoki taklif topilmadi.', getAdminMainMenu());
+      await ctx.reply('Hozircha hech qanday murojaat yoki taklif topilmadi. 📭', getAdminMainMenu());
       return;
     }
 
@@ -358,15 +411,18 @@ ${req.proofText}`;
       const u = c.user;
       const userHandle = u.username ? `@${u.username}` : u.firstName || 'Foydalanuvchi';
       const lastMsg = c.messages[0]?.content || '(Xabar yo‘q)';
-      const snippet = lastMsg.length > 60 ? lastMsg.substring(0, 57) + '...' : lastMsg;
+      const snippet = lastMsg.length > 70 ? lastMsg.substring(0, 67) + '...' : lastMsg;
       let statusIcon = '💬';
       if (c.status === ConversationStatus.WAITING_HUMAN) statusIcon = '⏳';
       else if (c.status === ConversationStatus.CLOSED) statusIcon = '✅';
 
-      return `${i + 1}. ${statusIcon} ${userHandle} (ID: ${u.telegramId.toString()}):\n   "${snippet}"`;
+      return `<b>${i + 1}.</b> ${statusIcon} <b>${userHandle}</b> (<code>${u.telegramId.toString()}</code>):\n   <i>"${snippet}"</i>`;
     });
 
-    await ctx.reply(`📩 So‘nggi murojaat va takliflar:\n\n${lines.join('\n\n')}`, getAdminMainMenu());
+    await ctx.reply(`📩 <b>So‘nggi murojaat va takliflar:</b> 🌟\n\n${lines.join('\n\n')}`, {
+      parse_mode: 'HTML',
+      ...getAdminMainMenu(),
+    });
   });
 
   bot.hears(ADMIN_MENU_BUTTONS.USERS, async (ctx) => {
@@ -374,23 +430,29 @@ ${req.proofText}`;
 
     const recent = await users.getRecentUsers(10);
     if (recent.length === 0) {
-      await ctx.reply('Hozircha foydalanuvchilar ro‘yxati bo‘sh.', getAdminMainMenu());
+      await ctx.reply('Hozircha foydalanuvchilar ro‘yxati bo‘sh. 👥', getAdminMainMenu());
       return;
     }
 
     const userList = recent
       .map(
         (u, i) =>
-          `${i + 1}. ${u.username ? `@${u.username}` : u.firstName || 'No name'} (ID: ${u.telegramId.toString()}) ${u.isVerified ? '🛡 [Tasdiqlangan]' : ''} - ${u.isBlocked ? '🚫 Blok' : '✅ Faol'}`,
+          `<b>${i + 1}.</b> ${u.username ? `@${u.username}` : u.firstName || 'No name'} (<code>${u.telegramId.toString()}</code>) ${u.isVerified ? '🛡 <b>[Tasdiqlangan]</b>' : ''} - ${u.isBlocked ? '🚫 <i>Bloklangan</i>' : '✅ <i>Faol</i>'}`,
       )
       .join('\n');
 
-    await ctx.reply(`👥 So‘nggi 10 ta foydalanuvchi:\n\n${userList}`, getAdminMainMenu());
+    await ctx.reply(`👥 <b>So‘nggi 10 ta foydalanuvchi:</b> 🌟\n\n${userList}`, {
+      parse_mode: 'HTML',
+      ...getAdminMainMenu(),
+    });
   });
 
   bot.hears(ADMIN_MENU_BUTTONS.REFRESH, async (ctx) => {
     if (!isSenderAdmin(ctx.from?.id)) return;
-    await ctx.reply('🔄 Boshqaruv paneli menyusi yangilandi.', getAdminMainMenu());
+    await ctx.reply('🔄 <b>Boshqaruv paneli menyusi yangilandi.</b>', {
+      parse_mode: 'HTML',
+      ...getAdminMainMenu(),
+    });
   });
 
   // -------------------------------------------------------------
@@ -402,7 +464,7 @@ ${req.proofText}`;
       return;
     }
 
-    await ctx.reply(ADMIN_START_MESSAGE, getAdminMainMenu());
+    await ctx.reply(ADMIN_START_MESSAGE, { parse_mode: 'HTML', ...getAdminMainMenu() });
   });
 
   bot.command('stats', async (ctx) => {
@@ -417,21 +479,21 @@ ${req.proofText}`;
       verification.getVerificationStats(),
     ]);
 
-    const statsReport = `📊 Tizim Statistikasi:
+    const statsReport = `📊 <b>Tizim Statistikasi:</b> 🌟
 
-👥 Jami foydalanuvchilar: ${userCount}
-💬 Jami suhbatlar: ${convStats.total}
-🟢 Ochiq: ${convStats.open}
-⏳ Navbatda kutayotgan: ${convStats.waitingHuman}
-✅ Yopilgan: ${convStats.closed}
+👥 <b>Jami foydalanuvchilar:</b> ${userCount}
+💬 <b>Jami suhbatlar:</b> ${convStats.total}
+🟢 <b>Ochiq:</b> ${convStats.open}
+⏳ <b>Navbatda kutayotgan:</b> ${convStats.waitingHuman}
+✅ <b>Yopilgan:</b> ${convStats.closed}
 
-🛡 Verifikatsiya:
-📥 Jami kelgan: ${vStats.total}
-⏳ Kutilmoqda: ${vStats.pending}
-✅ Tasdiqlangan: ${vStats.approved}
-❌ Rad etilgan: ${vStats.rejected}`;
+🛡 <b>Verifikatsiya:</b>
+📥 <b>Jami kelgan:</b> ${vStats.total}
+⏳ <b>Kutilmoqda:</b> ${vStats.pending}
+✅ <b>Tasdiqlangan:</b> ${vStats.approved}
+❌ <b>Rad etilgan:</b> ${vStats.rejected}`;
 
-    await ctx.reply(statsReport, getAdminMainMenu());
+    await ctx.reply(statsReport, { parse_mode: 'HTML', ...getAdminMainMenu() });
   });
 
   bot.command('users', async (ctx) => {
@@ -449,11 +511,14 @@ ${req.proofText}`;
     const userList = recent
       .map(
         (u, i) =>
-          `${i + 1}. ${u.username ? `@${u.username}` : u.firstName || 'No name'} (ID: ${u.telegramId.toString()}) ${u.isVerified ? '🛡 [Tasdiqlangan]' : ''} - ${u.isBlocked ? '🚫 Bloklangan' : '✅ Faol'}`,
+          `<b>${i + 1}.</b> ${u.username ? `@${u.username}` : u.firstName || 'No name'} (<code>${u.telegramId.toString()}</code>) ${u.isVerified ? '🛡 <b>[Tasdiqlangan]</b>' : ''} - ${u.isBlocked ? '🚫 <i>Bloklangan</i>' : '✅ <i>Faol</i>'}`,
       )
       .join('\n');
 
-    await ctx.reply(`👥 So‘nggi 10 ta foydalanuvchi:\n\n${userList}`, getAdminMainMenu());
+    await ctx.reply(`👥 <b>So‘nggi 10 ta foydalanuvchi:</b>\n\n${userList}`, {
+      parse_mode: 'HTML',
+      ...getAdminMainMenu(),
+    });
   });
 
   bot.command('open', async (ctx) => {
@@ -564,10 +629,17 @@ ${req.proofText}`;
         const originalText =
           ctx.callbackQuery && 'message' in ctx.callbackQuery && ctx.callbackQuery.message && 'text' in ctx.callbackQuery.message
             ? ctx.callbackQuery.message.text
-            : '';
-        await ctx.editMessageText(
-          `${originalText}\n\n━━━━━━━━━━━━━━━━━━━━\n✅ TASDIQLANDI! (${adminName} tomonidan ma’qullandi va foydalanuvchiga tasdiqlanganlik xabari yuborildi)`,
-        );
+            : ctx.callbackQuery && 'message' in ctx.callbackQuery && ctx.callbackQuery.message && 'caption' in ctx.callbackQuery.message
+              ? (ctx.callbackQuery.message as { caption?: string }).caption || ''
+              : '';
+
+        const confirmationNotice = `${originalText}\n\n━━━━━━━━━━━━━━━━━━━━\n✅ <b>TASDIQLANDI!</b> 🌟 (${adminName} tomonidan ma’qullandi va foydalanuvchiga tasdiqlanganlik xabari yuborildi)`;
+
+        if (ctx.callbackQuery && 'message' in ctx.callbackQuery && ctx.callbackQuery.message && 'caption' in ctx.callbackQuery.message) {
+          await ctx.editMessageCaption(confirmationNotice, { parse_mode: 'HTML' });
+        } else {
+          await ctx.editMessageText(confirmationNotice, { parse_mode: 'HTML' });
+        }
       } else {
         await ctx.answerCbQuery('❌ Xatolik yuz berdi yoki allaqachon ko‘rib chiqilgan.', { show_alert: true });
       }
@@ -600,10 +672,17 @@ ${req.proofText}`;
         const originalText =
           ctx.callbackQuery && 'message' in ctx.callbackQuery && ctx.callbackQuery.message && 'text' in ctx.callbackQuery.message
             ? ctx.callbackQuery.message.text
-            : '';
-        await ctx.editMessageText(
-          `${originalText}\n\n━━━━━━━━━━━━━━━━━━━━\n❌ RAD ETILDI (${adminName} tomonidan rad etildi va foydalanuvchiga xabar yuborildi)`,
-        );
+            : ctx.callbackQuery && 'message' in ctx.callbackQuery && ctx.callbackQuery.message && 'caption' in ctx.callbackQuery.message
+              ? (ctx.callbackQuery.message as { caption?: string }).caption || ''
+              : '';
+
+        const rejectionNotice = `${originalText}\n\n━━━━━━━━━━━━━━━━━━━━\n❌ <b>RAD ETILDI</b> (${adminName} tomonidan rad etildi va foydalanuvchiga xabar yuborildi)`;
+
+        if (ctx.callbackQuery && 'message' in ctx.callbackQuery && ctx.callbackQuery.message && 'caption' in ctx.callbackQuery.message) {
+          await ctx.editMessageCaption(rejectionNotice, { parse_mode: 'HTML' });
+        } else {
+          await ctx.editMessageText(rejectionNotice, { parse_mode: 'HTML' });
+        }
       } else {
         await ctx.answerCbQuery('❌ Xatolik yuz berdi.', { show_alert: true });
       }
@@ -616,6 +695,49 @@ ${req.proofText}`;
   });
 
   // -------------------------------------------------------------
+  // PHOTO / SCREENSHOT HANDLER (Verification & feedback proof)
+  // -------------------------------------------------------------
+  bot.on(message('photo'), async (ctx) => {
+    const fromUser = ctx.from;
+    const photos = ctx.message.photo;
+    const largestPhoto = photos[photos.length - 1];
+    const photoFileId = largestPhoto.file_id;
+    const caption = ctx.message.caption || '';
+    const isAdmin = isSenderAdmin(fromUser.id);
+
+    logger.info(
+      { userId: fromUser.id, photoFileId, caption },
+      'Received photo/screenshot from user',
+    );
+
+    const vResult = await verification.submitVerificationRequest({
+      telegramId: fromUser.id,
+      username: fromUser.username,
+      firstName: fromUser.first_name,
+      lastName: fromUser.last_name,
+      proofText: caption || '📸 Foydalanuvchi skrinshot yubordi',
+      photoFileId,
+    });
+
+    const hasUsernameInCaption =
+      caption.includes('@') ||
+      caption.toLowerCase().includes('nik') ||
+      caption.toLowerCase().includes('user') ||
+      caption.toLowerCase().includes('profil');
+
+    let photoReply = vResult.userMessage;
+    if (!hasUsernameInCaption) {
+      photoReply +=
+        '\n\n💡 <b>Muhim eslatma:</b>\nAgar hali yozmagan bo‘lsangiz, tasdiqlash nishoni berilishi kerak bo‘lgan <b>Zynygram ilovasidagi foydalanuvchi nomingizni (username / nikingizni)</b> ham shu yerga yozib yuboring! 📱🛡';
+    }
+
+    await ctx.reply(photoReply, {
+      parse_mode: 'HTML',
+      ...(isAdmin ? getAdminMainMenu() : getUserMainMenu()),
+    });
+  });
+
+  // -------------------------------------------------------------
   // NON-TEXT CONTENT HANDLERS (voice, video, stickers, files)
   // -------------------------------------------------------------
   bot.on(
@@ -624,13 +746,15 @@ ${req.proofText}`;
       message('video'),
       message('sticker'),
       message('document'),
-      message('photo'),
       message('audio'),
       message('video_note'),
     ],
     async (ctx) => {
       logger.info({ userId: ctx.from?.id }, 'Unsupported media type received');
-      await ctx.reply(UNSUPPORTED_CONTENT_MESSAGE, isSenderAdmin(ctx.from?.id) ? getAdminMainMenu() : getUserMainMenu());
+      await ctx.reply(UNSUPPORTED_CONTENT_MESSAGE, {
+        parse_mode: 'HTML',
+        ...(isSenderAdmin(ctx.from?.id) ? getAdminMainMenu() : getUserMainMenu()),
+      });
     },
   );
 
@@ -681,7 +805,59 @@ ${req.proofText}`;
         lastName: fromUser.last_name,
         proofText: text,
       });
-      await ctx.reply(vResult.userMessage, isAdmin ? getAdminMainMenu() : getUserMainMenu());
+
+      const hasUsernameInText =
+        text.includes('@') ||
+        lowerText.includes('nik') ||
+        lowerText.includes('user') ||
+        lowerText.includes('profil') ||
+        lowerText.includes('login');
+
+      let textReply = vResult.userMessage;
+      if (!hasUsernameInText) {
+        textReply +=
+          '\n\n💡 <b>Muhim eslatma:</b>\nAgar hali yozmagan bo‘lsangiz, tasdiqlash nishoni berilishi kerak bo‘lgan <b>Zynygram ilovasidagi foydalanuvchi nomingizni (username / nikingizni)</b> ham shu yerga yozib yuboring! 📱🛡';
+      }
+
+      await ctx.reply(textReply, {
+        parse_mode: 'HTML',
+        ...(isAdmin ? getAdminMainMenu() : getUserMainMenu()),
+      });
+      return;
+    }
+
+    // Feedback / Suggestion / Bug report detection
+    const isFeedback =
+      lowerText.includes('taklif') ||
+      lowerText.includes('muammo') ||
+      lowerText.includes('shikoyat') ||
+      lowerText.includes('xatolik') ||
+      lowerText.includes('ishlamayapti') ||
+      lowerText.includes('fikr') ||
+      lowerText.includes('maslahat') ||
+      lowerText.includes('bug');
+
+    if (!isAdmin && isFeedback) {
+      const userHandle = fromUser.username ? `@${fromUser.username}` : fromUser.first_name || 'Foydalanuvchi';
+      const feedbackAlert = `📩 <b>YANGI TAKLIF YOKI MUAMMO MUROJAATI!</b> 🌟
+
+👤 <b>Foydalanuvchi:</b> ${userHandle}
+🆔 <b>Telegram ID:</b> <code>${fromUser.id}</code>
+🕒 <b>Vaqt:</b> ${new Date().toLocaleString('uz-UZ')}
+
+💬 <b>Murojaat matni:</b>
+<i>"${text}"</i>`;
+
+      try {
+        await ctx.telegram.sendMessage(PRIMARY_ADMIN_TELEGRAM_ID, feedbackAlert, { parse_mode: 'HTML' });
+      } catch (err) {
+        logger.error({ error: err }, 'Failed to forward feedback alert to admin');
+      }
+
+      await ctx.reply(FEEDBACK_RECEIVED_MESSAGE, {
+        parse_mode: 'HTML',
+        ...getUserMainMenu(),
+      });
       return;
     }
 

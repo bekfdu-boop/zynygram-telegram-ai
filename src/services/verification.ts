@@ -8,10 +8,10 @@ import logger from '../utils/logger';
 export const PRIMARY_ADMIN_TELEGRAM_ID = '8191294446';
 
 export const VERIFICATION_APPROVED_USER_MESSAGE =
-  'Tabriklaymiz! 🎉\n\nSizning Zynygram tasdiqlash nishoni (verifikatsiya) so‘rovingiz ma’qullandi va profilingiz muvaffaqiyatli tasdiqlandi! 🛡✨\n\nZynygram loyihasini qo‘llab-quvvatlaganingiz uchun tashakkur!';
+  '🎉 <b>Tabriklaymiz!</b> 🌟\n\nSizning <b>Zynygram tasdiqlash nishoni</b> (verifikatsiya) so‘rovingiz ma’qullandi va profilingiz <i>muvaffaqiyatli tasdiqlandi!</i> 🛡✨\n\n<b>Zynygram</b> loyihasini qo‘llab-quvvatlayotganingiz uchun samimiy minnatdorchilik bildiramiz! 🤝🚀';
 
 export const VERIFICATION_REJECTED_USER_MESSAGE =
-  'Kechirasiz, sizning Zynygram tasdiqlash nishoni so‘rovingiz rad etildi.\n\nIltimos, rasmiy shartlar (Story/Reels yoki Telegram kanallarda post ulashish) to‘liq bajarilganligini tekshirib, qaytadan havola bilan murojaat qiling.';
+  'Kechirasiz, sizning <b>Zynygram tasdiqlash nishoni</b> so‘rovingiz rad etildi. ℹ️\n\nIltimos, rasmiy shartlar (<i>Story/Reels yoki Telegram kanallarda post ulashish</i>) to‘liq bajarilganligini tekshirib, qaytadan havola yoki skrinshot bilan murojaat qiling. 🤝';
 
 export interface CreateVerificationInput {
   telegramId: bigint | string | number;
@@ -19,6 +19,7 @@ export interface CreateVerificationInput {
   firstName?: string | null;
   lastName?: string | null;
   proofText: string;
+  photoFileId?: string | null;
 }
 
 export class VerificationService {
@@ -44,11 +45,17 @@ export class VerificationService {
         lastName: input.lastName,
       });
 
+      const finalProof = input.photoFileId
+        ? input.proofText
+          ? `${input.proofText}\n[Photo: ${input.photoFileId}]`
+          : `[Photo: ${input.photoFileId}]`
+        : input.proofText;
+
       const request = await prisma.verificationRequest.create({
         data: {
           userId: user.id,
           status: VerificationStatus.PENDING,
-          proofText: input.proofText,
+          proofText: finalProof,
         },
         include: {
           user: true,
@@ -67,7 +74,7 @@ export class VerificationService {
         success: true,
         requestId: request.id,
         userMessage:
-          '✅ Sizning tasdiqlash nishoni bo‘yicha arizangiz qabul qilindi va ma’muriyatga yuborildi!\n\nTez orada ko‘rib chiqilib, profilingiz tasdiqlanadi. Iltimos, javobni kuting.',
+          '✅ <b>Arizangiz qabul qilindi!</b> 🌟\n\nSiz yuborgan isbot <i>(havola yoki skrinshot)</i> ma’muriyatimizga ko‘rib chiqish uchun yuborildi. 🛡\n\nTez orada mutaxassislarimiz ko‘rib chiqib, profilingizni tasdiqlashadi. <i>Iltimos, biroz kuting.</i> 🤝✨',
       };
     } catch (error) {
       logger.error({ error }, 'Failed to submit verification request');
@@ -123,6 +130,7 @@ export class VerificationService {
           await this.botInstance.telegram.sendMessage(
             userTelegramId,
             VERIFICATION_APPROVED_USER_MESSAGE,
+            { parse_mode: 'HTML' },
           );
         } catch (msgErr) {
           logger.error({ error: msgErr, userTelegramId }, 'Failed to send approval message to user');
@@ -172,6 +180,7 @@ export class VerificationService {
           await this.botInstance.telegram.sendMessage(
             userTelegramId,
             VERIFICATION_REJECTED_USER_MESSAGE,
+            { parse_mode: 'HTML' },
           );
         } catch (msgErr) {
           logger.error({ error: msgErr, userTelegramId }, 'Failed to send rejection message to user');
@@ -200,14 +209,24 @@ export class VerificationService {
       ? `@${request.user.username}`
       : request.user.firstName || 'Foydalanuvchi';
 
-    const alertText = `🛡 YANGI TASDIQLASH NISHONI SO‘ROVI!
+    const photoMatch = request.proofText?.match(/\[Photo:\s*([^\]]+)\]/);
+    const cleanProof = request.proofText ? request.proofText.replace(/\[Photo:\s*[^\]]+\]/, '').trim() : '';
 
-Foydalanuvchi: ${userHandle}
-Telegram ID: ${request.user.telegramId.toString()}
-Vaqt: ${new Date().toLocaleString('uz-UZ')}
+    // Detect Zynygram username if provided in message
+    const customNikMatch = cleanProof.match(/(?:nik|username|profil|login|nomi)[\s:]*@?([a-zA-Z0-9_.]{3,30})/i);
+    const atUsernameMatch = cleanProof.match(/@([a-zA-Z0-9_.]{3,30})/);
+    const detectedUsername = customNikMatch ? customNikMatch[1] : (atUsernameMatch ? atUsernameMatch[1] : null);
+    const zynygramDisplay = detectedUsername ? `<code>@${detectedUsername}</code>` : '⚠️ <i>(Xabar/rasmdan qarang)</i>';
 
-Yuborilgan Isbot / Murojaat:
-${request.proofText || '(Isbot matni yo‘q)'}`;
+    const alertText = `🛡 <b>YANGI TASDIQLASH NISHONI SO‘ROVI!</b>
+
+👤 <b>Telegram profili:</b> ${userHandle}
+🆔 <b>Telegram ID:</b> <code>${request.user.telegramId.toString()}</code>
+📱 <b>Zynygram Profili:</b> ${zynygramDisplay}
+🕒 <b>Vaqt:</b> ${new Date().toLocaleString('uz-UZ')}
+
+📝 <b>Yuborilgan Isbot / Murojaat:</b>
+${cleanProof || (photoMatch ? '📸 <i>(Skrinshot / Rasm ilova qilingan)</i>' : '<i>(Isbot matni yo‘q)</i>')}`;
 
     const keyboard = Markup.inlineKeyboard([
       [
@@ -224,8 +243,20 @@ ${request.proofText || '(Isbot matni yo‘q)'}`;
 
     for (const targetId of targets) {
       try {
-        const sent = await this.botInstance.telegram.sendMessage(targetId, alertText, keyboard);
-        logger.info({ targetId, messageId: sent.message_id }, 'Verification alert successfully sent to admin target');
+        if (photoMatch) {
+          const sent = await this.botInstance.telegram.sendPhoto(targetId, photoMatch[1], {
+            caption: alertText,
+            parse_mode: 'HTML',
+            reply_markup: keyboard.reply_markup,
+          });
+          logger.info({ targetId, messageId: sent.message_id }, 'Verification photo alert successfully sent to admin target');
+        } else {
+          const sent = await this.botInstance.telegram.sendMessage(targetId, alertText, {
+            parse_mode: 'HTML',
+            reply_markup: keyboard.reply_markup,
+          });
+          logger.info({ targetId, messageId: sent.message_id }, 'Verification text alert successfully sent to admin target');
+        }
       } catch (err) {
         logger.error({ targetId, error: err }, 'Failed to send verification alert to admin target');
       }
