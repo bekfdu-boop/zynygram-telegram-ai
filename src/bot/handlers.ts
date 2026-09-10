@@ -6,7 +6,6 @@ import conversationService, { ConversationService } from '../services/conversati
 import escalationService, { EscalationService } from '../services/escalation';
 import verificationService, {
   VerificationService,
-  PRIMARY_ADMIN_TELEGRAM_ID,
 } from '../services/verification';
 import {
   getUserMainMenu,
@@ -17,6 +16,7 @@ import {
 import { ConversationStatus } from '@prisma/client';
 import config from '../config/env';
 import logger from '../utils/logger';
+import { escapeTelegramHtml } from '../utils/text';
 
 export const VERIFY_INFO_MESSAGE = `🛡 <b>Zynygram Tasdiqlash Nishonini Olish Shartlari:</b>
 
@@ -93,7 +93,7 @@ export const UNAUTHORIZED_ADMIN_MESSAGE = 'Bu amal faqat administratorlar uchun.
 function isSenderAdmin(fromId?: number | bigint | string): boolean {
   if (!fromId) return false;
   const idStr = fromId.toString();
-  return idStr === PRIMARY_ADMIN_TELEGRAM_ID || config.adminIds.includes(idStr);
+  return config.adminIds.includes(idStr);
 }
 
 export function registerBotHandlers(
@@ -626,7 +626,7 @@ ${cleanProof || (photoMatch ? '📸 <i>(Skrinshot ilova qilingan)</i>' : '<i>(Is
       const requestId = (ctx.match && ctx.match[1]) || cbData.replace('v_app:', '');
       logger.info({ fromId, requestId, cbData }, 'Executing v_app approval callback');
 
-      const result = await verification.approveRequest(requestId, fromId || PRIMARY_ADMIN_TELEGRAM_ID);
+      const result = await verification.approveRequest(requestId, fromId || 'telegram-admin');
 
       if (result.success) {
         await ctx.answerCbQuery('✅ Foydalanuvchi tasdiqlandi!');
@@ -652,7 +652,9 @@ ${cleanProof || (photoMatch ? '📸 <i>(Skrinshot ilova qilingan)</i>' : '<i>(Is
       logger.error({ error: err }, 'Unhandled error in v_app action');
       try {
         await ctx.answerCbQuery('❌ Xatolik yuz berdi.', { show_alert: true });
-      } catch {}
+      } catch {
+        // The callback query may already have expired; there is nothing left to acknowledge.
+      }
     }
   });
 
@@ -669,7 +671,7 @@ ${cleanProof || (photoMatch ? '📸 <i>(Skrinshot ilova qilingan)</i>' : '<i>(Is
       const requestId = (ctx.match && ctx.match[1]) || cbData.replace('v_rej:', '');
       logger.info({ fromId, requestId, cbData }, 'Executing v_rej rejection callback');
 
-      const result = await verification.rejectRequest(requestId, fromId || PRIMARY_ADMIN_TELEGRAM_ID);
+      const result = await verification.rejectRequest(requestId, fromId || 'telegram-admin');
 
       if (result.success) {
         await ctx.answerCbQuery('❌ So‘rov rad etildi');
@@ -695,7 +697,9 @@ ${cleanProof || (photoMatch ? '📸 <i>(Skrinshot ilova qilingan)</i>' : '<i>(Is
       logger.error({ error: err }, 'Unhandled error in v_rej action');
       try {
         await ctx.answerCbQuery('❌ Xatolik yuz berdi.', { show_alert: true });
-      } catch {}
+      } catch {
+        // The callback query may already have expired; there is nothing left to acknowledge.
+      }
     }
   });
 
@@ -801,8 +805,9 @@ ${cleanProof || (photoMatch ? '📸 <i>(Skrinshot ilova qilingan)</i>' : '<i>(Is
       lowerText.includes('post') ||
       lowerText.includes('kanal');
 
-    // Automatically submit verification request if it has a link or mentions verification conditions
-    if (hasLink || mentionsVerification) {
+    // A link by itself is not proof: require a clear verification intent and a link or username.
+    const isVerificationSubmission = mentionsVerification && (hasLink || /@[a-zA-Z0-9_.]{3,30}/.test(text));
+    if (isVerificationSubmission) {
       const vResult = await verification.submitVerificationRequest({
         telegramId: fromUser.id,
         username: fromUser.username,
@@ -851,10 +856,15 @@ ${cleanProof || (photoMatch ? '📸 <i>(Skrinshot ilova qilingan)</i>' : '<i>(Is
 🕒 <b>Vaqt:</b> ${new Date().toLocaleString('uz-UZ')}
 
 💬 <b>Murojaat matni:</b>
-<i>"${text}"</i>`;
+<i>"${escapeTelegramHtml(text)}"</i>`;
 
       try {
-        await ctx.telegram.sendMessage(PRIMARY_ADMIN_TELEGRAM_ID, feedbackAlert, { parse_mode: 'HTML' });
+        const feedbackTarget = config.supportGroupId || config.adminIds[0];
+        if (feedbackTarget) {
+          await ctx.telegram.sendMessage(feedbackTarget, feedbackAlert, { parse_mode: 'HTML' });
+        } else {
+          logger.warn('Feedback received but no support recipient is configured');
+        }
       } catch (err) {
         logger.error({ error: err }, 'Failed to forward feedback alert to admin');
       }

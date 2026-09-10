@@ -30,7 +30,7 @@ export function getUserMainMenu() {
 }
 
 /**
- * Returns the persistent reply keyboard for administrators (ID: 8191294446)
+ * Returns the persistent reply keyboard for configured administrators.
  */
 export function getAdminMainMenu() {
   return Markup.keyboard([
@@ -41,4 +41,3 @@ export function getAdminMainMenu() {
     .resize()
     .persistent();
 }
-

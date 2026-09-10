@@ -64,6 +64,18 @@ export class ConversationRepository {
     });
   }
 
+  /** Records the Telegram Business transport needed for an operator reply. */
+  public async setBusinessConnection(
+    id: string,
+    businessConnectionId: string,
+    businessChatId: string | number | bigint,
+  ): Promise<Conversation> {
+    return prisma.conversation.update({
+      where: { id },
+      data: { businessConnectionId, businessChatId: BigInt(businessChatId) },
+    });
+  }
+
   /**
    * Counts conversations optionally filtered by status
    */
@@ -106,4 +118,3 @@ export class ConversationRepository {
 
 export const conversationRepository = new ConversationRepository();
 export default conversationRepository;
-

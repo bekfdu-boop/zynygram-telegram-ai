@@ -57,7 +57,13 @@ const envSchema = z.object({
   ADMIN_PANEL_PASSWORD: z
     .string()
     .optional()
-    .default('zynygram2026'),
+    .transform((val) => val?.trim() || undefined),
+  ADMIN_SESSION_TTL_MS: z
+    .string()
+    .optional()
+    .default('28800000')
+    .transform((val) => parseInt(val, 10))
+    .pipe(z.number().int().min(60_000).max(7 * 24 * 60 * 60 * 1000)),
 });
 
 const parseEnv = () => {
@@ -86,7 +92,9 @@ export const config = {
   adminIds: parsed.ADMIN_TELEGRAM_IDS,
   supportGroupId: parsed.SUPPORT_GROUP_ID,
   maxMessageLength: parsed.MAX_MESSAGE_LENGTH,
-  adminPassword: parsed.ADMIN_PANEL_PASSWORD,
+  // A deterministic password is available only to the isolated Vitest process; production never has a default.
+  adminPassword: parsed.ADMIN_PANEL_PASSWORD ?? (process.env.VITEST ? 'vitest-admin-password' : undefined),
+  adminSessionTtlMs: parsed.ADMIN_SESSION_TTL_MS,
   nodeEnv: parsed.NODE_ENV,
   port: parsed.PORT,
   rateLimit: {
@@ -100,4 +108,3 @@ export const config = {
 
 export type Config = typeof config;
 export default config;
-

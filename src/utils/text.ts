@@ -34,6 +34,16 @@ export function escapeMarkdownV2(text: string): string {
   return text.replace(/[_*[\]()~`>#+\-=|{}.!]/g, '\\$&');
 }
 
+/** Escapes untrusted content before putting it in Telegram's HTML parse mode. */
+export function escapeTelegramHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 /**
  * Checks for common leaked secrets/credentials patterns (API keys, JWT, passwords, etc.)
  */

@@ -18,6 +18,8 @@ export interface ProcessMessageInput {
   lastName?: string | null;
   text: string;
   telegramMessageId?: bigint | number | string | null;
+  businessConnectionId?: string | null;
+  businessChatId?: bigint | number | string | null;
 }
 
 export interface ProcessMessageResult {
@@ -65,6 +67,13 @@ export class SupportService {
 
     // 3. Find or create conversation
     const conversation = await this.conversations.getOrCreateActiveConversation(user.id);
+    if (input.businessConnectionId && input.businessChatId != null) {
+      await this.conversations.setBusinessConnection(
+        conversation.id,
+        input.businessConnectionId,
+        input.businessChatId,
+      );
+    }
 
     // 4. Save incoming USER message
     await this.conversations.saveMessage(

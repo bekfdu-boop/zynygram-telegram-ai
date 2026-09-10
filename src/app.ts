@@ -8,6 +8,10 @@ import { createServer, startServer, stopServer } from './server/server';
 async function bootstrap(): Promise<void> {
   logger.info({ nodeEnv: config.nodeEnv }, 'Starting Zynygram Telegram AI Support system...');
 
+  if (config.isProduction && !config.adminPassword) {
+    throw new Error('ADMIN_PANEL_PASSWORD must be configured in production');
+  }
+
   // 1. Load Knowledge Base
   try {
     await loadKnowledgeBase();
@@ -20,15 +24,6 @@ async function bootstrap(): Promise<void> {
     await prisma.$connect();
     logger.info('Database connection established successfully');
 
-    // Automatically apply migrations if needed
-    try {
-      const { execSync } = await import('child_process');
-      logger.info('Applying database migrations...');
-      execSync('npx prisma migrate deploy', { stdio: 'inherit' });
-      logger.info('Database migrations verified and up to date');
-    } catch (migErr) {
-      logger.warn({ error: migErr }, 'Prisma migrate deploy via execSync failed, continuing with existing schema');
-    }
   } catch (dbErr) {
     logger.error({ error: dbErr }, 'Unable to connect to PostgreSQL database');
     if (config.isProduction) {
@@ -84,4 +79,3 @@ bootstrap().catch((error) => {
   logger.fatal({ error }, 'Fatal error during application bootstrap');
   process.exit(1);
 });
-

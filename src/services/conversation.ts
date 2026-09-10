@@ -56,6 +56,14 @@ export class ConversationService {
     return this.convRepo.updateStatus(conversationId, status);
   }
 
+  public async setBusinessConnection(
+    conversationId: string,
+    businessConnectionId: string,
+    businessChatId: string | number | bigint,
+  ): Promise<Conversation> {
+    return this.convRepo.setBusinessConnection(conversationId, businessConnectionId, businessChatId);
+  }
+
   /**
    * Closes a conversation
    */
@@ -205,4 +213,3 @@ export class ConversationService {
 
 export const conversationService = new ConversationService();
 export default conversationService;
-

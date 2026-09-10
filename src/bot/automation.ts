@@ -1,8 +1,9 @@
 import { Telegraf } from 'telegraf';
 import supportService, { SupportService } from '../services/support';
-import verificationService, { VerificationService, PRIMARY_ADMIN_TELEGRAM_ID } from '../services/verification';
+import verificationService, { VerificationService } from '../services/verification';
 import config from '../config/env';
 import logger from '../utils/logger';
+import { escapeTelegramHtml } from '../utils/text';
 
 /**
  * Telegram Chat Automation (Telegram Business) handler.
@@ -71,7 +72,6 @@ export function registerChatAutomationHandlers(
 
       // Ignore messages sent by the business owner / admin themselves
       if (
-        fromUser.id.toString() === PRIMARY_ADMIN_TELEGRAM_ID ||
         config.adminIds.includes(fromUser.id.toString())
       ) {
         logger.debug({ fromUserId: fromUser.id }, 'Ignoring business message sent by admin / business owner');
@@ -156,7 +156,8 @@ export function registerChatAutomationHandlers(
         lowerText.includes('post') ||
         lowerText.includes('kanal');
 
-      if (hasLink || mentionsVerification) {
+      const isVerificationSubmission = mentionsVerification && (hasLink || /@[a-zA-Z0-9_.]{3,30}/.test(text));
+      if (isVerificationSubmission) {
         logger.info(
           { fromUserId: fromUser.id, chatId, textPreview: text.substring(0, 40) },
           'Incoming business message identified as verification submission',
@@ -211,10 +212,15 @@ export function registerChatAutomationHandlers(
 
       if (isFeedback) {
         const userHandle = fromUser.username ? `@${fromUser.username}` : fromUser.first_name || 'Mijoz';
-        const feedbackAlert = `📩 <b>YANGI TAKLIF YOKI MUAMMO MUROJAATI!</b> 🌟\n\n👤 <b>Foydalanuvchi:</b> ${userHandle}\n🆔 <b>Telegram ID:</b> <code>${fromUser.id}</code>\n💬 <b>Chat:</b> <i>Telegram Business Chat</i>\n🕒 <b>Vaqt:</b> ${new Date().toLocaleString('uz-UZ')}\n\n💬 <b>Murojaat matni:</b>\n<i>"${text}"</i>`;
+      const feedbackAlert = `📩 <b>YANGI TAKLIF YOKI MUAMMO MUROJAATI!</b> 🌟\n\n👤 <b>Foydalanuvchi:</b> ${escapeTelegramHtml(userHandle)}\n🆔 <b>Telegram ID:</b> <code>${fromUser.id}</code>\n💬 <b>Chat:</b> <i>Telegram Business Chat</i>\n🕒 <b>Vaqt:</b> ${new Date().toLocaleString('uz-UZ')}\n\n💬 <b>Murojaat matni:</b>\n<i>"${escapeTelegramHtml(text)}"</i>`;
 
         try {
-          await ctx.telegram.sendMessage(PRIMARY_ADMIN_TELEGRAM_ID, feedbackAlert, { parse_mode: 'HTML' });
+          const feedbackTarget = config.supportGroupId || config.adminIds[0];
+          if (feedbackTarget) {
+            await ctx.telegram.sendMessage(feedbackTarget, feedbackAlert, { parse_mode: 'HTML' });
+          } else {
+            logger.warn('Business feedback received but no support recipient is configured');
+          }
         } catch (err) {
           logger.error({ error: err }, 'Failed to forward business feedback alert to admin');
         }
@@ -236,6 +242,8 @@ export function registerChatAutomationHandlers(
           lastName: fromUser.last_name,
           text,
           telegramMessageId: msg.message_id,
+          businessConnectionId: connectionId,
+          businessChatId: chatId,
         });
 
         if (result.replyText) {

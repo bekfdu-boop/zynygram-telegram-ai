@@ -220,6 +220,8 @@ Configure the following variables in `.env`:
 | `MAX_MESSAGE_LENGTH`| No | `4000` | Maximum character length for incoming/outgoing messages |
 | `NODE_ENV` | No | `development` | `development`, `production`, or `test` |
 | `PORT` | No | `3000` | HTTP port for Fastify server |
+| `ADMIN_PANEL_PASSWORD` | **Yes in production** | — | Unique, high-entropy password for `/admin`; the panel is disabled if omitted |
+| `ADMIN_SESSION_TTL_MS` | No | `28800000` | Admin session lifetime in milliseconds (default: 8 hours) |
 | `RATE_LIMIT_MAX_REQUESTS` | No | `10` | Max user requests per window |
 | `RATE_LIMIT_WINDOW_MS` | No | `60000` | Sliding window in milliseconds (default: 60s) |
 
@@ -374,4 +376,3 @@ Users whose numeric Telegram IDs are listed in `ADMIN_TELEGRAM_IDS` have access 
 ## 📄 License
 
 MIT License. Designed and maintained for Zynygram.
-

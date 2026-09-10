@@ -4,8 +4,10 @@ import userService, { UserService } from './user';
 import { VerificationRequest, VerificationStatus } from '@prisma/client';
 import config from '../config/env';
 import logger from '../utils/logger';
+import { escapeTelegramHtml } from '../utils/text';
 
-export const PRIMARY_ADMIN_TELEGRAM_ID = '8191294446';
+/** @deprecated Use config.adminIds; retained only for backwards-compatible imports. */
+export const PRIMARY_ADMIN_TELEGRAM_ID = config.adminIds[0] ?? '';
 
 export const VERIFICATION_APPROVED_USER_MESSAGE =
   '🎉 <b>Tabriklaymiz!</b> 🌟\n\nSizning <b>Zynygram tasdiqlash nishoni</b> (verifikatsiya) so‘rovingiz ma’qullandi va profilingiz <i>muvaffaqiyatli tasdiqlandi!</i> 🛡✨\n\n<b>Zynygram</b> loyihasini qo‘llab-quvvatlayotganingiz uchun samimiy minnatdorchilik bildiramiz! 🤝🚀';
@@ -73,7 +75,7 @@ export class VerificationService {
         'Verification request created, notifying admin',
       );
 
-      // Dispatch interactive notification to admin (8191294446 and configured admins)
+      // Dispatch interactive notification to configured support recipients.
       await this.sendVerificationAlertToAdmin(request);
 
       return {
@@ -158,7 +160,7 @@ export class VerificationService {
         }
 
         // If not sent via business connection, send direct Telegram message (provided user is not admin)
-        if (!sent && userTelegramId !== adminTelegramId.toString() && userTelegramId !== PRIMARY_ADMIN_TELEGRAM_ID) {
+        if (!sent && userTelegramId !== adminTelegramId.toString()) {
           try {
             await this.botInstance.telegram.sendMessage(
               userTelegramId,
@@ -238,7 +240,7 @@ export class VerificationService {
         }
 
         // If not sent via business connection, send direct Telegram message (provided user is not admin)
-        if (!sent && userTelegramId !== adminTelegramId.toString() && userTelegramId !== PRIMARY_ADMIN_TELEGRAM_ID) {
+        if (!sent && userTelegramId !== adminTelegramId.toString()) {
           try {
             await this.botInstance.telegram.sendMessage(
               userTelegramId,
@@ -287,7 +289,7 @@ export class VerificationService {
     const customNikMatch = cleanProof.match(/(?:nik|username|profil|login|nomi)[\s:]*@?([a-zA-Z0-9_.]{3,30})/i);
     const atUsernameMatch = cleanProof.match(/@([a-zA-Z0-9_.]{3,30})/);
     const detectedUsername = customNikMatch ? customNikMatch[1] : (atUsernameMatch ? atUsernameMatch[1] : null);
-    const zynygramDisplay = detectedUsername ? `<code>@${detectedUsername}</code>` : '⚠️ <i>(Xabar/rasmdan qarang)</i>';
+    const zynygramDisplay = detectedUsername ? `<code>@${escapeTelegramHtml(detectedUsername)}</code>` : '⚠️ <i>(Xabar/rasmdan qarang)</i>';
 
     const alertText = `🛡 <b>YANGI TASDIQLASH NISHONI SO‘ROVI!</b>
 
@@ -299,6 +301,10 @@ export class VerificationService {
 📝 <b>Yuborilgan Isbot / Murojaat:</b>
 ${cleanProof || (photoMatch ? '📸 <i>(Skrinshot / Rasm ilova qilingan)</i>' : '<i>(Isbot matni yo‘q)</i>')}`;
 
+    const safeAlertText = alertText
+      .replace(userHandle, escapeTelegramHtml(userHandle))
+      .replace(cleanProof, cleanProof ? escapeTelegramHtml(cleanProof) : '');
+
     const keyboard = Markup.inlineKeyboard([
       [
         Markup.button.callback('✅ Tasdiqlash', `v_app:${request.id}`),
@@ -306,8 +312,8 @@ ${cleanProof || (photoMatch ? '📸 <i>(Skrinshot / Rasm ilova qilingan)</i>' : 
       ],
     ]);
 
-    // Send to primary admin profile (8191294446) and configured admin IDs
-    const targets = new Set<string>([PRIMARY_ADMIN_TELEGRAM_ID, ...config.adminIds]);
+    // Send to configured administrators and, when set, the support group.
+    const targets = new Set<string>(config.adminIds);
     if (config.supportGroupId) {
       targets.add(config.supportGroupId);
     }
@@ -316,13 +322,13 @@ ${cleanProof || (photoMatch ? '📸 <i>(Skrinshot / Rasm ilova qilingan)</i>' : 
       try {
         if (photoMatch) {
           const sent = await this.botInstance.telegram.sendPhoto(targetId, photoMatch[1], {
-            caption: alertText,
+            caption: safeAlertText,
             parse_mode: 'HTML',
             reply_markup: keyboard.reply_markup,
           });
           logger.info({ targetId, messageId: sent.message_id }, 'Verification photo alert successfully sent to admin target');
         } else {
-          const sent = await this.botInstance.telegram.sendMessage(targetId, alertText, {
+          const sent = await this.botInstance.telegram.sendMessage(targetId, safeAlertText, {
             parse_mode: 'HTML',
             reply_markup: keyboard.reply_markup,
           });
@@ -502,4 +508,3 @@ ${cleanProof || (photoMatch ? '📸 <i>(Skrinshot / Rasm ilova qilingan)</i>' : 
 
 export const verificationService = new VerificationService();
 export default verificationService;
-

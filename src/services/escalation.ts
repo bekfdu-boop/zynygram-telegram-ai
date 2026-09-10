@@ -80,7 +80,7 @@ Last message:
 ${req.lastMessageContent}`;
 
     try {
-      const targets = new Set<string>(['8191294446', ...config.adminIds]);
+      const targets = new Set<string>(config.adminIds);
       if (config.supportGroupId) {
         targets.add(config.supportGroupId);
       }

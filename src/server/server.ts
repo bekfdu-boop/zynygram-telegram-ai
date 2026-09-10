@@ -7,7 +7,6 @@ import adminRoutes from './admin/admin.routes';
 export function createServer(): FastifyInstance {
   const server = Fastify({
     logger: false, // We use our central Pino logger
-    disableRequestLogging: true,
   });
 
   // Register health check endpoints
@@ -51,4 +50,3 @@ export async function stopServer(server: FastifyInstance): Promise<void> {
     logger.error({ error }, 'Error while stopping Fastify HTTP server');
   }
 }
-

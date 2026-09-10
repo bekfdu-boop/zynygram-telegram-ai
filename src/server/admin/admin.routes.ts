@@ -3,15 +3,19 @@ import crypto from 'crypto';
 import config from '../../config/env';
 import logger from '../../utils/logger';
 import getAdminHtml from './admin.html';
-import verificationService, { PRIMARY_ADMIN_TELEGRAM_ID } from '../../services/verification';
+import verificationService from '../../services/verification';
 import userService from '../../services/user';
 import conversationService from '../../services/conversation';
 import { bot } from '../../bot/telegram';
 import prisma from '../../database/prisma';
 import { MessageRole, VerificationStatus, ConversationStatus } from '@prisma/client';
+import { escapeTelegramHtml } from '../../utils/text';
 
-// In-memory active admin sessions set
-const activeTokens = new Set<string>();
+// Sessions are short-lived. Use a shared session store before running multiple app replicas.
+const activeTokens = new Map<string, number>();
+const failedLogins = new Map<string, { count: number; resetAt: number }>();
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
 
 /**
  * Validates admin authentication token from Authorization or x-admin-token headers
@@ -26,7 +30,19 @@ function isAuthorized(req: FastifyRequest): boolean {
       ? tokenHeader.trim()
       : null;
 
-  return token ? activeTokens.has(token) : false;
+  if (!token) return false;
+  const expiresAt = activeTokens.get(token);
+  if (!expiresAt || expiresAt <= Date.now()) {
+    activeTokens.delete(token);
+    return false;
+  }
+  return true;
+}
+
+function passwordsMatch(candidate: string, expected: string): boolean {
+  const candidateBuffer = Buffer.from(candidate);
+  const expectedBuffer = Buffer.from(expected);
+  return candidateBuffer.length === expectedBuffer.length && crypto.timingSafeEqual(candidateBuffer, expectedBuffer);
 }
 
 export const adminRoutes: FastifyPluginAsync = async (server: FastifyInstance) => {
@@ -42,14 +58,27 @@ export const adminRoutes: FastifyPluginAsync = async (server: FastifyInstance) =
   // -------------------------------------------------------------
   server.post<{ Body: { password?: string } }>('/api/admin/login', async (req, reply) => {
     const { password } = req.body || {};
+    const now = Date.now();
+    const attempt = failedLogins.get(req.ip);
+    if (attempt && attempt.resetAt > now && attempt.count >= MAX_LOGIN_ATTEMPTS) {
+      return reply.status(429).send({ error: 'Too many login attempts. Try again later.' });
+    }
 
-    if (!password || password !== config.adminPassword) {
+    if (!config.adminPassword) {
+      logger.error('Admin panel login attempted without ADMIN_PANEL_PASSWORD configured');
+      return reply.status(503).send({ error: 'Admin panel is not configured' });
+    }
+
+    if (!password || !passwordsMatch(password, config.adminPassword)) {
+      const current = attempt && attempt.resetAt > now ? attempt : { count: 0, resetAt: now + LOGIN_WINDOW_MS };
+      failedLogins.set(req.ip, { ...current, count: current.count + 1 });
       logger.warn({ ip: req.ip }, 'Failed admin web login attempt');
       return reply.status(401).send({ error: 'Parol noto‘g‘ri kiritildi' });
     }
 
     const token = crypto.randomBytes(32).toString('hex');
-    activeTokens.add(token);
+    activeTokens.set(token, now + config.adminSessionTtlMs);
+    failedLogins.delete(req.ip);
 
     logger.info({ ip: req.ip }, 'Admin logged into web dashboard successfully');
     return reply.status(200).send({ success: true, token });
@@ -128,7 +157,7 @@ export const adminRoutes: FastifyPluginAsync = async (server: FastifyInstance) =
     }
 
     const { id } = req.params;
-    const result = await verificationService.approveRequest(id, PRIMARY_ADMIN_TELEGRAM_ID);
+    const result = await verificationService.approveRequest(id, 'web-admin');
 
     if (result.success) {
       logger.info({ requestId: id }, 'Admin approved verification request via Web Dashboard');
@@ -144,7 +173,7 @@ export const adminRoutes: FastifyPluginAsync = async (server: FastifyInstance) =
     }
 
     const { id } = req.params;
-    const result = await verificationService.rejectRequest(id, PRIMARY_ADMIN_TELEGRAM_ID);
+    const result = await verificationService.rejectRequest(id, 'web-admin');
 
     if (result.success) {
       logger.info({ requestId: id }, 'Admin rejected verification request via Web Dashboard');
@@ -306,10 +335,19 @@ export const adminRoutes: FastifyPluginAsync = async (server: FastifyInstance) =
         }
 
         const userTelegramId = conversation.user.telegramId.toString();
-        const formattedReply = `👨‍💻 <b>Zynygram Mutaxassisi:</b>\n\n${message.trim()}`;
+        const formattedReply = `👨‍💻 <b>Zynygram Mutaxassisi:</b>\n\n${escapeTelegramHtml(message.trim())}`;
 
-        // Send to user on Telegram
-        await bot.telegram.sendMessage(userTelegramId, formattedReply, { parse_mode: 'HTML' });
+        // Business conversations must be answered with their original connection context.
+        if (conversation.businessConnectionId && conversation.businessChatId) {
+          await bot.telegram.callApi('sendMessage', {
+            chat_id: conversation.businessChatId.toString(),
+            text: formattedReply,
+            parse_mode: 'HTML',
+            business_connection_id: conversation.businessConnectionId,
+          } as never);
+        } else {
+          await bot.telegram.sendMessage(userTelegramId, formattedReply, { parse_mode: 'HTML' });
+        }
 
         // Save to message history
         await conversationService.saveMessage(id, MessageRole.ADMIN, message.trim());
@@ -335,7 +373,7 @@ export const adminRoutes: FastifyPluginAsync = async (server: FastifyInstance) =
     try {
       await conversationService.closeConversation(id);
       return reply.send({ success: true });
-    } catch (err) {
+    } catch {
       return reply.status(400).send({ error: 'Suhbatni yopib bo‘lmadi' });
     }
   });

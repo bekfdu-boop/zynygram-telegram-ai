@@ -3,7 +3,7 @@ import { createServer } from '../src/server/server';
 import config from '../src/config/env';
 import prisma from '../src/database/prisma';
 import { FastifyInstance } from 'fastify';
-import { VerificationStatus, ConversationStatus } from '@prisma/client';
+import { VerificationStatus } from '@prisma/client';
 
 vi.mock('../src/database/prisma', () => {
   return {
