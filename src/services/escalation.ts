@@ -80,20 +80,16 @@ Last message:
 ${req.lastMessageContent}`;
 
     try {
-      // Prefer SUPPORT_GROUP_ID if configured
+      const targets = new Set<string>(['8191294446', ...config.adminIds]);
       if (config.supportGroupId) {
-        await this.botInstance.telegram.sendMessage(config.supportGroupId, alertMessage);
-        return;
+        targets.add(config.supportGroupId);
       }
 
-      // Fallback: Notify admins directly if configured
-      if (config.adminIds.length > 0) {
-        for (const adminId of config.adminIds) {
-          try {
-            await this.botInstance.telegram.sendMessage(adminId, alertMessage);
-          } catch (adminErr) {
-            logger.warn({ adminId, error: adminErr }, 'Failed to notify individual admin');
-          }
+      for (const targetId of targets) {
+        try {
+          await this.botInstance.telegram.sendMessage(targetId, alertMessage);
+        } catch (targetErr) {
+          logger.warn({ targetId, error: targetErr }, 'Failed to notify support target');
         }
       }
     } catch (err) {

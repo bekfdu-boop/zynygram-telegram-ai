@@ -21,17 +21,25 @@ enum MessageRole {
   ADMIN
 }
 
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model User {
-  id            String         @id @default(uuid())
-  telegramId    BigInt         @unique
-  username      String?
-  firstName     String?
-  lastName      String?
-  language      String?        @default("uz")
-  isBlocked     Boolean        @default(false)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  conversations Conversation[]
+  id                   String                @id @default(uuid())
+  telegramId           BigInt                @unique
+  username             String?
+  firstName            String?
+  lastName             String?
+  language             String?               @default("uz")
+  isBlocked            Boolean               @default(false)
+  isVerified           Boolean               @default(false)
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  conversations        Conversation[]
+  verificationRequests VerificationRequest[]
 
   @@index([telegramId])
 }
@@ -63,3 +71,15 @@ model Message {
   @@index([createdAt])
 }
 
+model VerificationRequest {
+  id        String             @id @default(uuid())
+  userId    String
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status    VerificationStatus @default(PENDING)
+  proofText String?            @db.Text
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}

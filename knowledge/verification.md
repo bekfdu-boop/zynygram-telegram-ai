@@ -1,23 +1,30 @@
-# Verification Badges (Tasdiqlash belgisi)
+# Verification Badges (Zynygram Tasdiqlash Nishoni)
 
 ## Official information
-- Verification badges on Zynygram confirm the authenticity of notable accounts, public figures, brands, and active creators.
-- Verification cannot be acquired through informal or unauthorized channels.
-- OFFICIAL POLICY REQUIRED: Official verification criteria, eligibility requirements, and badge validity duration.
+- Zynygram tasdiqlash nishoni (verifikatsiya / ko‘k belgi) foydalanuvchining rasmiy va haqiqiy profil ekanligini tasdiqlaydi.
+- Tasdiqlash nishonini olish uchun rasmiy shartlar quyidagicha belgilangan:
+  1. **1-shart (Instagram / Telegram Reels yoki Story)**:
+     - Foydalanuvchi rasmiy https://t.me/Zynygram_media/2 postini olib, Instagram yoki Telegramda **Reels** yoki **Story** ko‘rinishida o‘z sahifasida ulashishi (joylashi) kerak.
+  2. **2-shart (Telegram kanallarda ulashish)**:
+     - Yoki rasmiy https://t.me/zynygram/21 postini (yoki havolasini) ommaviy **Telegram kanallarda** tarqatishi kerak.
+- Yuqoridagi 2 ta shartdan biri bajarilgach, foydalanuvchi uning isbotini (havola yoki skrinshot) botga yuboradi yoki `/verify` buyrug‘ini beradi.
+- So‘rov moderator/admin tomonidan ko‘rib chiqiladi va tugma orqali tasdiqlanadi. Tasdiqlangach, foydalanuvchiga tasdiqlanganligi haqida rasmiy xabar yuboriladi.
 
 ## Procedures
-- Requesting verification:
-  - Users inquiring about verification status must follow official in-app submission channels once enabled.
-  - OFFICIAL POLICY REQUIRED: Step-by-step submission procedures, required identification documents, and review timelines.
-  - If a user inquires how to get verified, clarify that confirmed official criteria and submission guidelines are currently pending official policy release, and offer connection to a human operator via `/human`.
+- Tasdiqlash nishonini olish bosqichlari:
+  1. https://t.me/Zynygram_media/2 postini Instagram/Telegram Story yoki Reels qiling YOKI https://t.me/zynygram/21 postini Telegram kanallarda tarqating.
+  2. Bajarganligingiz haqidagi havola yoki isbotni ushbu botga yuboring (yoki `/verify` buyrug‘idan foydalaning).
+  3. Zynygram ma’muriyati so‘rovingizni ko‘rib chiqadi va profilingizni tasdiqlaydi.
 
 ## Frequently asked questions
-- **Tasdiqlash belgisini qanday olsa bo‘ladi? (How to get verified?)**
-  Hozircha Zynygram-da tasdiqlash belgisini (verifikatsiya) berish bo'yicha rasmiy talablar va qoidalar yakuniy tasdiqlash jarayonida. Ushbu masala bo'yicha aniq ma'lumot chiqqanda e'lon qilinadi. Zarurat bo'lsa, sizni operatorimizga ulashim mumkin (/human).
-- **Tasdiqlash belgisi pullikmi? (Is verification paid?)**
-  OFFICIAL POLICY REQUIRED. Narxlar yoki to'lov shartlari haqida rasmiy ma'lumot yo'q. Sun'iy intellekt narxlarni o'ylab topmaydi.
+- **Tasdiqlash nishonini (ko‘k belgi) qanday olsa bo‘ladi?**
+  Zynygramda tasdiqlash nishonini olish uchun quyidagi shartlardan birini bajarishingiz kerak:
+  1. https://t.me/Zynygram_media/2 postimizni Instagram yoki Telegramda Reels yoki Story qilib chiqaring.
+  2. YOKI https://t.me/zynygram/21 postimizni Telegram kanallarda tarqating.
+  Shartni bajarganingizdan so‘ng, isboti bilan birga shu yerga yozing yoki /verify buyrug‘ini yuboring. Ma’muriyatimiz ko‘rib chiqib, profilingizni tasdiqlaydi!
+- **Tasdiqlash nishoni bepulmi?**
+  Ha, yuqoridagi rasmiy ijtimoiy shartlarni bajargan har bir faol foydalanuvchiga tasdiqlash nishoni beriladi.
 
 ## Notes
-- Do not invent verification costs, deadlines, or document checklists.
-- Never ask users for personal documents, passwords, or login codes via chat.
-
+- Har qanday tasdiqlash so‘rovi to‘g‘ridan-to‘g‘ri ma’muriyatga tekshirish uchun yuboriladi.
+- Foydalanuvchilardan shaxsiy parol yoki maxfiy kodlar so‘ralmaydi.

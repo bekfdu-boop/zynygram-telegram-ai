@@ -5,6 +5,7 @@ import { botErrorHandler, createRateLimitMiddleware } from './middleware';
 import { registerBotHandlers } from './handlers';
 import { registerChatAutomationHandlers } from './automation';
 import escalationService from '../services/escalation';
+import verificationService from '../services/verification';
 
 export const bot = new Telegraf(config.botToken);
 
@@ -19,8 +20,9 @@ export function initBot(): Telegraf {
   // Rate limiting middleware
   bot.use(createRateLimitMiddleware());
 
-  // Bind bot instance to escalation service for admin/support group alerts
+  // Bind bot instance to escalation and verification services for admin alerts
   escalationService.setBot(bot);
+  verificationService.setBot(bot);
 
   // Register command and message handlers
   registerBotHandlers(bot);

@@ -23,7 +23,7 @@ describe('Knowledge Base & Retrieval', () => {
     expect(results.length).toBeGreaterThan(0);
     const topResult = results[0];
     expect(topResult.section.sourceFile).toBe('verification.md');
-    expect(topResult.section.content).toContain('OFFICIAL POLICY REQUIRED');
+    expect(topResult.section.content).toContain('Zynygram_media');
   });
 
   it('should find payment guidance when queried about billing or cards', () => {

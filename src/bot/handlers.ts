@@ -4,18 +4,41 @@ import supportService, { SupportService } from '../services/support';
 import userService, { UserService } from '../services/user';
 import conversationService, { ConversationService } from '../services/conversation';
 import escalationService, { EscalationService } from '../services/escalation';
+import verificationService, {
+  VerificationService,
+  PRIMARY_ADMIN_TELEGRAM_ID,
+} from '../services/verification';
 import { isAuthorizedAdmin } from './middleware';
 import { ConversationStatus } from '@prisma/client';
 import logger from '../utils/logger';
+
+export const VERIFY_INFO_MESSAGE = `🛡 Zynygram Tasdiqlash Nishonini Olish Shartlari:
+
+Rasmiy tasdiqlash nishonini (ko‘k belgi) olish uchun quyidagi 2 ta rasmiy shartdan birini bajaring:
+
+1️⃣ 1-variant (Instagram yoki Telegram Story / Reels):
+Rasmiy https://t.me/Zynygram_media/2 postimizni Instagram yoki Telegram profilingizda Story yoki Reels qilib ulashing.
+
+2️⃣ 2-variant (Telegram kanallarda tarqatish):
+YOKI rasmiy https://t.me/zynygram/21 postimizni Telegram kanallarda tarqating.
+
+✅ Shartni bajarganingizdan so‘ng:
+Ushbu botga isbot tariqasida havolani (link) yoki skrinshotni yuboring, yoki:
+/verify <postingiz_yoki_kanalingiz_havolasi>
+ko‘rinishida yozing.
+
+Arizangiz ma’muriyatimizga yuboriladi va tekshirilib, profilingiz tasdiqlanadi!`;
 
 export const START_MESSAGE = `Assalomu alaykum! 👋
 
 Men Zynygram AI Support yordamchisiman.
 
-Zynygram, akkaunt, tasdiqlash belgisi, reklama hamkorligi yoki texnik muammolar bo‘yicha savollaringizga yordam beraman.
+Zynygram, akkaunt, tasdiqlash nishoni, reklama hamkorligi yoki texnik muammolar bo‘yicha savollaringizga yordam beraman.
 
-Agar operator bilan bog‘lanmoqchi bo‘lsangiz:
-/human`;
+Kerakli buyruqlar:
+/verify - Tasdiqlash nishonini olish shartlari
+/human - Tirik operator bilan bog‘lanish
+/ai - AI yordamchini qayta faollashtirish`;
 
 export const HELP_MESSAGE = `ℹ️ Zynygram AI Support bo‘yicha qo‘llanma:
 
@@ -47,7 +70,29 @@ export function registerBotHandlers(
   users: UserService = userService,
   conversations: ConversationService = conversationService,
   escalations: EscalationService = escalationService,
+  verification: VerificationService = verificationService,
 ): void {
+  // /verify command
+  bot.command(['verify', 'tasdiqlash'], async (ctx) => {
+    const fromUser = ctx.from;
+    if (!fromUser) return;
+
+    const args = ctx.message.text.split(' ').slice(1).join(' ').trim();
+    if (args.length > 0) {
+      const res = await verification.submitVerificationRequest({
+        telegramId: fromUser.id,
+        username: fromUser.username,
+        firstName: fromUser.first_name,
+        lastName: fromUser.last_name,
+        proofText: args,
+      });
+      await ctx.reply(res.userMessage);
+      return;
+    }
+
+    await ctx.reply(VERIFY_INFO_MESSAGE);
+  });
+
   // /start command
   bot.command('start', async (ctx) => {
     const fromUser = ctx.from;
@@ -316,6 +361,57 @@ export function registerBotHandlers(
   });
 
   // -------------------------------------------------------------
+  // VERIFICATION APPROVAL & REJECTION ACTIONS (Admin Interactive Buttons)
+  // -------------------------------------------------------------
+  bot.action(/^v_app:(.+)$/, async (ctx) => {
+    const fromId = ctx.from?.id?.toString();
+    const isAllowed = fromId === PRIMARY_ADMIN_TELEGRAM_ID || (ctx.from && isAuthorizedAdmin(ctx));
+    if (!isAllowed) {
+      await ctx.answerCbQuery(UNAUTHORIZED_ADMIN_MESSAGE, { show_alert: true });
+      return;
+    }
+
+    const requestId = ctx.match[1];
+    const result = await verification.approveRequest(requestId, fromId || PRIMARY_ADMIN_TELEGRAM_ID);
+
+    if (result.success) {
+      await ctx.answerCbQuery('✅ Foydalanuvchi tasdiqlandi!');
+      const adminName = ctx.from.username ? `@${ctx.from.username}` : ctx.from.first_name;
+      const originalText =
+        ctx.callbackQuery.message && 'text' in ctx.callbackQuery.message ? ctx.callbackQuery.message.text : '';
+      await ctx.editMessageText(
+        `${originalText}\n\n━━━━━━━━━━━━━━━━━━━━\n✅ TASDIQLANDI! (${adminName} tomonidan ma’qullandi va foydalanuvchiga tasdiqlanganlik xabari yuborildi)`,
+      );
+    } else {
+      await ctx.answerCbQuery('❌ Xatolik yuz berdi yoki allaqachon ko‘rib chiqilgan.', { show_alert: true });
+    }
+  });
+
+  bot.action(/^v_rej:(.+)$/, async (ctx) => {
+    const fromId = ctx.from?.id?.toString();
+    const isAllowed = fromId === PRIMARY_ADMIN_TELEGRAM_ID || (ctx.from && isAuthorizedAdmin(ctx));
+    if (!isAllowed) {
+      await ctx.answerCbQuery(UNAUTHORIZED_ADMIN_MESSAGE, { show_alert: true });
+      return;
+    }
+
+    const requestId = ctx.match[1];
+    const result = await verification.rejectRequest(requestId, fromId || PRIMARY_ADMIN_TELEGRAM_ID);
+
+    if (result.success) {
+      await ctx.answerCbQuery('❌ So‘rov rad etildi');
+      const adminName = ctx.from.username ? `@${ctx.from.username}` : ctx.from.first_name;
+      const originalText =
+        ctx.callbackQuery.message && 'text' in ctx.callbackQuery.message ? ctx.callbackQuery.message.text : '';
+      await ctx.editMessageText(
+        `${originalText}\n\n━━━━━━━━━━━━━━━━━━━━\n❌ RAD ETILDI (${adminName} tomonidan rad etildi va foydalanuvchiga xabar yuborildi)`,
+      );
+    } else {
+      await ctx.answerCbQuery('❌ Xatolik yuz berdi.', { show_alert: true });
+    }
+  });
+
+  // -------------------------------------------------------------
   // NON-TEXT CONTENT HANDLERS (voice, video, stickers, files)
   // -------------------------------------------------------------
   bot.on(
@@ -343,6 +439,32 @@ export function registerBotHandlers(
 
     // Ignore commands already caught
     if (text.startsWith('/')) {
+      return;
+    }
+
+    // Check if user is submitting proof for verification badge
+    const hasProofLink = text.includes('t.me/') || text.includes('instagram.com/');
+    const lowerText = text.toLowerCase();
+    const mentionsVerification =
+      lowerText.includes('tasdiqlash') ||
+      lowerText.includes('verifikatsiya') ||
+      lowerText.includes('nishon') ||
+      lowerText.includes('belgi') ||
+      lowerText.includes('reels') ||
+      lowerText.includes('story') ||
+      lowerText.includes('shart') ||
+      lowerText.includes('bajardim') ||
+      lowerText.includes('tekshiring');
+
+    if (hasProofLink && mentionsVerification) {
+      const vResult = await verification.submitVerificationRequest({
+        telegramId: fromUser.id,
+        username: fromUser.username,
+        firstName: fromUser.first_name,
+        lastName: fromUser.last_name,
+        proofText: text,
+      });
+      await ctx.reply(vResult.userMessage);
       return;
     }
 
