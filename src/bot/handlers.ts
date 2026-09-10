@@ -355,7 +355,12 @@ export function registerBotHandlers(
         : req.user.firstName || 'Nomsiz foydalanuvchi';
 
       const photoMatch = req.proofText?.match(/\[Photo:\s*([^\]]+)\]/);
-      const cleanProof = req.proofText ? req.proofText.replace(/\[Photo:\s*[^\]]+\]/, '').trim() : '';
+      const cleanProof = req.proofText
+        ? req.proofText
+            .replace(/\[Photo:\s*[^\]]+\]/g, '')
+            .replace(/\[BusinessChat:\s*[^\]]+\]/g, '')
+            .trim()
+        : '';
 
       const customNikMatch = cleanProof.match(/(?:nik|username|profil|login|nomi)[\s:]*@?([a-zA-Z0-9_.]{3,30})/i);
       const atUsernameMatch = cleanProof.match(/@([a-zA-Z0-9_.]{3,30})/);

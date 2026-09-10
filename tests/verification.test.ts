@@ -33,10 +33,10 @@ describe('VerificationService', () => {
 
     mockUser = {
       id: 'usr-ver-123',
-      telegramId: BigInt(8191294446),
-      username: 'testadmin',
+      telegramId: BigInt(987654321),
+      username: 'testuser',
       firstName: 'Test',
-      lastName: 'Admin',
+      lastName: 'User',
       language: 'uz',
       isBlocked: false,
       isVerified: false,
@@ -54,6 +54,7 @@ describe('VerificationService', () => {
       telegram: {
         sendMessage: vi.fn().mockResolvedValue({ message_id: 999 }),
         sendPhoto: vi.fn().mockResolvedValue({ message_id: 1000 }),
+        callApi: vi.fn().mockResolvedValue({ message_id: 1001 }),
       },
     } as unknown as Telegraf;
 
@@ -236,6 +237,93 @@ describe('VerificationService', () => {
       orderBy: { createdAt: 'desc' },
       take: 5,
     });
+  });
+
+  it('should route approval message to customer via business_connection_id in business chat', async () => {
+    const mockBizRequest = {
+      id: 'req-biz-001',
+      userId: mockUser.id,
+      status: VerificationStatus.PENDING,
+      proofText: 'Reels qildim\n[BusinessChat: b_conn_123:987654321]',
+      user: mockUser,
+    };
+
+    vi.mocked(prisma.verificationRequest.findUnique).mockResolvedValue(mockBizRequest as any);
+    vi.mocked(prisma.verificationRequest.update).mockResolvedValue({
+      ...mockBizRequest,
+      status: VerificationStatus.APPROVED,
+    } as any);
+    vi.mocked(prisma.user.update).mockResolvedValue({
+      ...mockUser,
+      isVerified: true,
+    } as any);
+
+    const result = await verificationService.approveRequest('req-biz-001', '8191294446');
+
+    expect(result.success).toBe(true);
+    expect(mockBot.telegram.callApi).toHaveBeenCalledWith('sendMessage', {
+      chat_id: '987654321',
+      text: VERIFICATION_APPROVED_USER_MESSAGE,
+      parse_mode: 'HTML',
+      business_connection_id: 'b_conn_123',
+    });
+    expect(mockBot.telegram.sendMessage).not.toHaveBeenCalled();
+  });
+
+  it('should route rejection message to customer via business_connection_id in business chat', async () => {
+    const mockBizRequest = {
+      id: 'req-biz-002',
+      userId: mockUser.id,
+      status: VerificationStatus.PENDING,
+      proofText: 'Noto‘g‘ri havola\n[BusinessChat: b_conn_123:987654321]',
+      user: mockUser,
+    };
+
+    vi.mocked(prisma.verificationRequest.findUnique).mockResolvedValue(mockBizRequest as any);
+    vi.mocked(prisma.verificationRequest.update).mockResolvedValue({
+      ...mockBizRequest,
+      status: VerificationStatus.REJECTED,
+    } as any);
+
+    const result = await verificationService.rejectRequest('req-biz-002', '8191294446');
+
+    expect(result.success).toBe(true);
+    expect(mockBot.telegram.callApi).toHaveBeenCalledWith('sendMessage', {
+      chat_id: '987654321',
+      text: VERIFICATION_REJECTED_USER_MESSAGE,
+      parse_mode: 'HTML',
+      business_connection_id: 'b_conn_123',
+    });
+    expect(mockBot.telegram.sendMessage).not.toHaveBeenCalled();
+  });
+
+  it('should never send congratulatory message to admin when admin account is approved', async () => {
+    const adminUser = {
+      ...mockUser,
+      telegramId: BigInt(8191294446),
+    };
+    const mockAdminRequest = {
+      id: 'req-admin-001',
+      userId: adminUser.id,
+      status: VerificationStatus.PENDING,
+      proofText: 'Test proof',
+      user: adminUser,
+    };
+
+    vi.mocked(prisma.verificationRequest.findUnique).mockResolvedValue(mockAdminRequest as any);
+    vi.mocked(prisma.verificationRequest.update).mockResolvedValue({
+      ...mockAdminRequest,
+      status: VerificationStatus.APPROVED,
+    } as any);
+    vi.mocked(prisma.user.update).mockResolvedValue({
+      ...adminUser,
+      isVerified: true,
+    } as any);
+
+    const result = await verificationService.approveRequest('req-admin-001', '8191294446');
+
+    expect(result.success).toBe(true);
+    expect(mockBot.telegram.sendMessage).not.toHaveBeenCalled();
   });
 });
 

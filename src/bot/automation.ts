@@ -1,6 +1,7 @@
 import { Telegraf } from 'telegraf';
 import supportService, { SupportService } from '../services/support';
-import verificationService, { VerificationService } from '../services/verification';
+import verificationService, { VerificationService, PRIMARY_ADMIN_TELEGRAM_ID } from '../services/verification';
+import config from '../config/env';
 import logger from '../utils/logger';
 
 /**
@@ -68,6 +69,15 @@ export function registerChatAutomationHandlers(
         return;
       }
 
+      // Ignore messages sent by the business owner / admin themselves
+      if (
+        fromUser.id.toString() === PRIMARY_ADMIN_TELEGRAM_ID ||
+        config.adminIds.includes(fromUser.id.toString())
+      ) {
+        logger.debug({ fromUserId: fromUser.id }, 'Ignoring business message sent by admin / business owner');
+        return;
+      }
+
       logger.info(
         {
           connectionId,
@@ -89,11 +99,26 @@ export function registerChatAutomationHandlers(
             lastName: fromUser.last_name,
             proofText: caption || '📸 Foydalanuvchi skrinshot yubordi',
             photoFileId,
+            businessConnectionId: connectionId,
+            chatId,
           });
+
+          let photoReply = vResult.userMessage;
+          const lowerCaption = (caption || '').toLowerCase();
+          const hasUsernameInCaption =
+            (caption || '').includes('@') ||
+            lowerCaption.includes('nik') ||
+            lowerCaption.includes('user') ||
+            lowerCaption.includes('profil');
+
+          if (!hasUsernameInCaption) {
+            photoReply +=
+              '\n\n💡 <b>Muhim eslatma:</b>\nAgar hali yozmagan bo‘lsangiz, tasdiqlash nishoni berilishi kerak bo‘lgan <b>Zynygram ilovasidagi foydalanuvchi nomingizni (username / nikingizni)</b> ham shu yerga yozib yuboring! 📱🛡';
+          }
 
           await ctx.telegram.callApi('sendMessage', {
             chat_id: chatId,
-            text: vResult.userMessage,
+            text: photoReply,
             parse_mode: 'HTML',
             business_connection_id: connectionId,
           } as never);
@@ -144,11 +169,26 @@ export function registerChatAutomationHandlers(
             firstName: fromUser.first_name,
             lastName: fromUser.last_name,
             proofText: text,
+            businessConnectionId: connectionId,
+            chatId,
           });
+
+          let textReply = vResult.userMessage;
+          const hasUsernameInText =
+            text.includes('@') ||
+            lowerText.includes('nik') ||
+            lowerText.includes('user') ||
+            lowerText.includes('profil') ||
+            lowerText.includes('login');
+
+          if (!hasUsernameInText) {
+            textReply +=
+              '\n\n💡 <b>Muhim eslatma:</b>\nAgar hali yozmagan bo‘lsangiz, tasdiqlash nishoni berilishi kerak bo‘lgan <b>Zynygram ilovasidagi foydalanuvchi nomingizni (username / nikingizni)</b> ham shu yerga yozib yuboring! 📱🛡';
+          }
 
           await ctx.telegram.callApi('sendMessage', {
             chat_id: chatId,
-            text: vResult.userMessage,
+            text: textReply,
             parse_mode: 'HTML',
             business_connection_id: connectionId,
           } as never);
@@ -156,6 +196,36 @@ export function registerChatAutomationHandlers(
         } catch (vErr) {
           logger.error({ error: vErr }, 'Failed to submit verification via business message');
         }
+      }
+
+      // Feedback / Suggestion / Problem detection in business chat
+      const isFeedback =
+        lowerText.includes('taklif') ||
+        lowerText.includes('muammo') ||
+        lowerText.includes('shikoyat') ||
+        lowerText.includes('xatolik') ||
+        lowerText.includes('ishlamayapti') ||
+        lowerText.includes('fikr') ||
+        lowerText.includes('maslahat') ||
+        lowerText.includes('bug');
+
+      if (isFeedback) {
+        const userHandle = fromUser.username ? `@${fromUser.username}` : fromUser.first_name || 'Mijoz';
+        const feedbackAlert = `📩 <b>YANGI TAKLIF YOKI MUAMMO MUROJAATI!</b> 🌟\n\n👤 <b>Foydalanuvchi:</b> ${userHandle}\n🆔 <b>Telegram ID:</b> <code>${fromUser.id}</code>\n💬 <b>Chat:</b> <i>Telegram Business Chat</i>\n🕒 <b>Vaqt:</b> ${new Date().toLocaleString('uz-UZ')}\n\n💬 <b>Murojaat matni:</b>\n<i>"${text}"</i>`;
+
+        try {
+          await ctx.telegram.sendMessage(PRIMARY_ADMIN_TELEGRAM_ID, feedbackAlert, { parse_mode: 'HTML' });
+        } catch (err) {
+          logger.error({ error: err }, 'Failed to forward business feedback alert to admin');
+        }
+
+        await ctx.telegram.callApi('sendMessage', {
+          chat_id: chatId,
+          text: 'Rahmat! Siz yuborgan taklif yoki muammo <i>ma’muriyatimizga yetkazildi</i>. 📩\n\nFikringiz <b>Zynygram</b> loyihasini yanada yaxshilashda biz uchun juda qadrlidir! 🤝✨',
+          parse_mode: 'HTML',
+          business_connection_id: connectionId,
+        } as never);
+        return;
       }
 
       try {

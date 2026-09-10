@@ -20,6 +20,8 @@ export interface CreateVerificationInput {
   lastName?: string | null;
   proofText: string;
   photoFileId?: string | null;
+  businessConnectionId?: string | null;
+  chatId?: string | number | null;
 }
 
 export class VerificationService {
@@ -45,11 +47,15 @@ export class VerificationService {
         lastName: input.lastName,
       });
 
-      const finalProof = input.photoFileId
+      let finalProof = input.photoFileId
         ? input.proofText
           ? `${input.proofText}\n[Photo: ${input.photoFileId}]`
           : `[Photo: ${input.photoFileId}]`
         : input.proofText;
+
+      if (input.businessConnectionId && input.chatId) {
+        finalProof = `${finalProof}\n[BusinessChat: ${input.businessConnectionId}:${input.chatId}]`;
+      }
 
       const request = await prisma.verificationRequest.create({
         data: {
@@ -126,14 +132,44 @@ export class VerificationService {
 
       // Send congratulations to user
       if (this.botInstance) {
-        try {
-          await this.botInstance.telegram.sendMessage(
-            userTelegramId,
-            VERIFICATION_APPROVED_USER_MESSAGE,
-            { parse_mode: 'HTML' },
-          );
-        } catch (msgErr) {
-          logger.error({ error: msgErr, userTelegramId }, 'Failed to send approval message to user');
+        let sent = false;
+        const businessMatch = request.proofText?.match(/\[BusinessChat:\s*([^:]+):([^\]]+)\]/);
+
+        if (businessMatch) {
+          const [, connectionId, chatId] = businessMatch;
+          try {
+            await this.botInstance.telegram.callApi('sendMessage', {
+              chat_id: chatId.trim(),
+              text: VERIFICATION_APPROVED_USER_MESSAGE,
+              parse_mode: 'HTML',
+              business_connection_id: connectionId.trim(),
+            } as never);
+            sent = true;
+            logger.info(
+              { requestId, chatId: chatId.trim(), connectionId: connectionId.trim() },
+              'Approval message successfully sent to user via Telegram Business connection',
+            );
+          } catch (bizErr) {
+            logger.error(
+              { error: bizErr, requestId, chatId, connectionId },
+              'Failed to deliver approval message via Telegram Business connection',
+            );
+          }
+        }
+
+        // If not sent via business connection, send direct Telegram message (provided user is not admin)
+        if (!sent && userTelegramId !== adminTelegramId.toString() && userTelegramId !== PRIMARY_ADMIN_TELEGRAM_ID) {
+          try {
+            await this.botInstance.telegram.sendMessage(
+              userTelegramId,
+              VERIFICATION_APPROVED_USER_MESSAGE,
+              { parse_mode: 'HTML' },
+            );
+            sent = true;
+            logger.info({ requestId, userTelegramId }, 'Approval message sent via direct Telegram chat');
+          } catch (msgErr) {
+            logger.error({ error: msgErr, userTelegramId }, 'Failed to send direct approval message to user');
+          }
         }
       }
 
@@ -176,14 +212,44 @@ export class VerificationService {
 
       // Send rejection notice to user
       if (this.botInstance) {
-        try {
-          await this.botInstance.telegram.sendMessage(
-            userTelegramId,
-            VERIFICATION_REJECTED_USER_MESSAGE,
-            { parse_mode: 'HTML' },
-          );
-        } catch (msgErr) {
-          logger.error({ error: msgErr, userTelegramId }, 'Failed to send rejection message to user');
+        let sent = false;
+        const businessMatch = request.proofText?.match(/\[BusinessChat:\s*([^:]+):([^\]]+)\]/);
+
+        if (businessMatch) {
+          const [, connectionId, chatId] = businessMatch;
+          try {
+            await this.botInstance.telegram.callApi('sendMessage', {
+              chat_id: chatId.trim(),
+              text: VERIFICATION_REJECTED_USER_MESSAGE,
+              parse_mode: 'HTML',
+              business_connection_id: connectionId.trim(),
+            } as never);
+            sent = true;
+            logger.info(
+              { requestId, chatId: chatId.trim(), connectionId: connectionId.trim() },
+              'Rejection message successfully sent to user via Telegram Business connection',
+            );
+          } catch (bizErr) {
+            logger.error(
+              { error: bizErr, requestId, chatId, connectionId },
+              'Failed to deliver rejection message via Telegram Business connection',
+            );
+          }
+        }
+
+        // If not sent via business connection, send direct Telegram message (provided user is not admin)
+        if (!sent && userTelegramId !== adminTelegramId.toString() && userTelegramId !== PRIMARY_ADMIN_TELEGRAM_ID) {
+          try {
+            await this.botInstance.telegram.sendMessage(
+              userTelegramId,
+              VERIFICATION_REJECTED_USER_MESSAGE,
+              { parse_mode: 'HTML' },
+            );
+            sent = true;
+            logger.info({ requestId, userTelegramId }, 'Rejection message sent via direct Telegram chat');
+          } catch (msgErr) {
+            logger.error({ error: msgErr, userTelegramId }, 'Failed to send direct rejection message to user');
+          }
         }
       }
 
@@ -210,7 +276,12 @@ export class VerificationService {
       : request.user.firstName || 'Foydalanuvchi';
 
     const photoMatch = request.proofText?.match(/\[Photo:\s*([^\]]+)\]/);
-    const cleanProof = request.proofText ? request.proofText.replace(/\[Photo:\s*[^\]]+\]/, '').trim() : '';
+    const cleanProof = request.proofText
+      ? request.proofText
+          .replace(/\[Photo:\s*[^\]]+\]/g, '')
+          .replace(/\[BusinessChat:\s*[^\]]+\]/g, '')
+          .trim()
+      : '';
 
     // Detect Zynygram username if provided in message
     const customNikMatch = cleanProof.match(/(?:nik|username|profil|login|nomi)[\s:]*@?([a-zA-Z0-9_.]{3,30})/i);
