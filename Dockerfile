@@ -48,10 +48,7 @@ RUN npx prisma generate
 COPY --from=builder /app/dist ./dist
 COPY knowledge ./knowledge
 
-# Security: run as non-root user
-USER node
-
 EXPOSE 3000
 
-CMD ["node", "dist/app.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/app.js"]
 

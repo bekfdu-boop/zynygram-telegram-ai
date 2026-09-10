@@ -19,6 +19,16 @@ async function bootstrap(): Promise<void> {
   try {
     await prisma.$connect();
     logger.info('Database connection established successfully');
+
+    // Automatically apply migrations if needed
+    try {
+      const { execSync } = await import('child_process');
+      logger.info('Applying database migrations...');
+      execSync('npx prisma migrate deploy', { stdio: 'inherit' });
+      logger.info('Database migrations verified and up to date');
+    } catch (migErr) {
+      logger.warn({ error: migErr }, 'Prisma migrate deploy via execSync failed, continuing with existing schema');
+    }
   } catch (dbErr) {
     logger.error({ error: dbErr }, 'Unable to connect to PostgreSQL database');
     if (config.isProduction) {

@@ -52,13 +52,17 @@ export function registerBotHandlers(
   bot.command('start', async (ctx) => {
     const fromUser = ctx.from;
     if (fromUser) {
-      await users.getOrCreateUser({
-        telegramId: fromUser.id,
-        username: fromUser.username,
-        firstName: fromUser.first_name,
-        lastName: fromUser.last_name,
-        language: fromUser.language_code,
-      });
+      try {
+        await users.getOrCreateUser({
+          telegramId: fromUser.id,
+          username: fromUser.username,
+          firstName: fromUser.first_name,
+          lastName: fromUser.last_name,
+          language: fromUser.language_code,
+        });
+      } catch (err) {
+        logger.error({ error: err }, 'Failed to persist user on /start command');
+      }
     }
     await ctx.reply(START_MESSAGE);
   });
