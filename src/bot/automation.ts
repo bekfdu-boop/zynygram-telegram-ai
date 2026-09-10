@@ -4,6 +4,7 @@ import verificationService, { VerificationService } from '../services/verificati
 import config from '../config/env';
 import logger from '../utils/logger';
 import { escapeTelegramHtml } from '../utils/text';
+import diagnostics from '../utils/diagnostics';
 
 /**
  * Telegram Chat Automation (Telegram Business) handler.
@@ -36,6 +37,22 @@ export function registerChatAutomationHandlers(
         is_enabled?: boolean;
         can_reply?: boolean;
       };
+
+      if (conn.id) {
+        diagnostics.setBusinessConnection(conn.id, {
+          userId: conn.user?.id,
+          username: conn.user?.username,
+          isEnabled: conn.is_enabled,
+          canReply: conn.can_reply,
+        });
+      }
+
+      diagnostics.record('business_connection', {
+        connectionId: conn.id,
+        user: conn.user?.username || conn.user?.id,
+        isEnabled: conn.is_enabled,
+        canReply: conn.can_reply,
+      });
 
       logger.info(
         {
@@ -70,11 +87,34 @@ export function registerChatAutomationHandlers(
         return;
       }
 
-      // Ignore messages sent by the business owner / admin themselves
-      if (
-        config.adminIds.includes(fromUser.id.toString())
-      ) {
-        logger.debug({ fromUserId: fromUser.id }, 'Ignoring business message sent by admin / business owner');
+      diagnostics.record('business_message_received', {
+        connectionId,
+        fromUserId: fromUser.id,
+        fromUsername: fromUser.username,
+        chatId,
+        textPreview: text ? text.substring(0, 50) : caption ? `[Photo: ${caption.substring(0, 30)}]` : '[Photo]',
+      });
+
+      // Ignore outgoing messages sent by the business owner to the customer
+      // In 1-on-1 business chats:
+      // If the sender matches the business connection owner, OR in 1-on-1 chats if chatId !== fromUser.id,
+      // it is an outgoing message from the business owner.
+      const connInfo = connectionId ? diagnostics.businessConnections.get(connectionId) : undefined;
+      const isOutgoingFromOwner = connInfo?.userId
+        ? connInfo.userId.toString() === fromUser.id.toString()
+        : chatId !== fromUser.id;
+
+      if (isOutgoingFromOwner) {
+        logger.debug(
+          { fromUserId: fromUser.id, chatId, connectionId },
+          'Ignoring outgoing business message sent by business owner',
+        );
+        diagnostics.record('business_message_ignored', {
+          reason: 'outgoing_from_business_owner',
+          fromUserId: fromUser.id,
+          chatId,
+          connectionId,
+        });
         return;
       }
 
@@ -252,14 +292,36 @@ export function registerChatAutomationHandlers(
             'Sending automated business message reply via Telegram Bot API',
           );
           // Send reply within the business chat context using official business_connection_id
-          await ctx.telegram.callApi('sendMessage', {
-            chat_id: chatId,
-            text: result.replyText,
-            business_connection_id: connectionId,
-          } as never);
-          logger.info({ chatId, connectionId }, 'Automated reply sent successfully');
+          try {
+            await ctx.telegram.callApi('sendMessage', {
+              chat_id: chatId,
+              text: result.replyText,
+              business_connection_id: connectionId,
+            } as never);
+            diagnostics.record('business_reply_sent', {
+              chatId,
+              connectionId,
+              textPreview: result.replyText.substring(0, 50),
+            });
+            logger.info({ chatId, connectionId }, 'Automated reply sent successfully');
+          } catch (apiErr) {
+            diagnostics.record('business_reply_error', {
+              chatId,
+              connectionId,
+              error: apiErr instanceof Error ? apiErr.message : String(apiErr),
+            });
+            logger.error(
+              { error: apiErr, connectionId, chatId },
+              'Telegram API error while sending automated business reply',
+            );
+          }
         }
       } catch (error) {
+        diagnostics.record('business_processing_error', {
+          error: error instanceof Error ? error.message : String(error),
+          connectionId,
+          chatId,
+        });
         logger.error(
           {
             error: error instanceof Error ? error.message : String(error),
