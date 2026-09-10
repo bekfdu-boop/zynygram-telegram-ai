@@ -1,6 +1,6 @@
 export function getAdminHtml(): string {
   return `<!DOCTYPE html>
-<html lang="uz" class="dark">
+<html lang="uz">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,87 +8,172 @@ export function getAdminHtml(): string {
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
   <script>
     tailwind.config = {
-      darkMode: 'class',
       theme: {
         extend: {
-          fontFamily: {
-            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-          },
           colors: {
-            brand: {
-              50: '#f5f3ff',
-              100: '#ede9fe',
-              500: '#8b5cf6',
-              600: '#7c3aed',
-              700: '#6d28d9',
-            }
+            carbon: '#181925',
+            'paper-white': '#ffffff',
+            linen: '#fafafa',
+            mist: '#f5f5f5',
+            fog: '#e8e8e8',
+            ash: '#999999',
+            graphite: '#666666',
+            lavender: '#918df6',
+            iris: '#9580ff',
+            mint: '#33c758',
+            'mint-wash': '#def6e4',
+            amber: '#ffa600',
+            sky: '#2c78fc',
+            magenta: '#d6409f',
+            ember: '#ff3e00',
+          },
+          fontFamily: {
+            sans: ['Inter', 'Plus Jakarta Sans', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+          },
+          boxShadow: {
+            'subtle': 'rgba(0, 0, 0, 0.08) 0px 1px 1px 1px, rgba(0, 0, 0, 0.06) 0px 0px 0px 0.5px',
+            'subtle-2': 'rgba(0, 0, 0, 0.08) 0px 1px 1px 0px, rgba(0, 0, 0, 0.05) 0px 0px 0px 1px',
+            'subtle-3': 'rgba(0, 0, 0, 0.06) 0px 1px 3px 0px, rgba(0, 0, 0, 0.06) 0px 8px 16px 0px, rgba(0, 0, 0, 0.02) 0px 0px 0px 1px',
+          },
+          letterSpacing: {
+            'tight-body': '-0.32px',
+            'tight-head': '-0.61px',
+            'tight-disp': '-1.5px',
           }
         }
       }
     }
   </script>
   <style>
-    body { font-family: 'Plus Jakarta Sans', sans-serif; }
-    /* Custom scrollbar */
+    :root {
+      --color-carbon: #181925;
+      --color-paper-white: #ffffff;
+      --color-linen: #fafafa;
+      --color-mist: #f5f5f5;
+      --color-fog: #e8e8e8;
+      --color-ash: #999999;
+      --color-graphite: #666666;
+      --color-lavender: #918df6;
+      --color-iris: #9580ff;
+      --color-mint: #33c758;
+      --color-mint-wash: #def6e4;
+      --color-amber: #ffa600;
+      --color-sky: #2c78fc;
+      --color-ember: #ff3e00;
+    }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      letter-spacing: -0.32px;
+      color: #181925;
+      background-color: #fafafa;
+    }
     ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #0f172a; }
-    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 9999px; }
-    ::-webkit-scrollbar-thumb:hover { background: #475569; }
-    .glass {
-      background: rgba(30, 41, 59, 0.7);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+    ::-webkit-scrollbar-track { background: #fafafa; }
+    ::-webkit-scrollbar-thumb { background: #e8e8e8; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #999999; }
+    .btn-pill-primary {
+      background-color: #918df6;
+      color: #ffffff;
+      border-radius: 9999px;
+      font-weight: 500;
+      font-size: 14px;
+      letter-spacing: -0.32px;
+      box-shadow: rgba(0, 0, 0, 0.08) 0px 1px 1px 1px, rgba(0, 0, 0, 0.06) 0px 0px 0px 0.5px;
+      transition: all 0.15s ease;
+    }
+    .btn-pill-primary:hover {
+      background-color: #7f7af3;
+      transform: translateY(-0.5px);
+    }
+    .btn-pill-ghost {
+      background-color: transparent;
+      color: #666666;
+      border-radius: 9999px;
+      font-weight: 500;
+      font-size: 14px;
+      letter-spacing: -0.32px;
+      transition: all 0.15s ease;
+    }
+    .btn-pill-ghost:hover {
+      background-color: #f5f5f5;
+      color: #181925;
+    }
+    .btn-pill-secondary {
+      background-color: #ffffff;
+      color: #181925;
+      border: 1px solid #e8e8e8;
+      border-radius: 9999px;
+      font-weight: 500;
+      font-size: 14px;
+      letter-spacing: -0.32px;
+      box-shadow: rgba(0, 0, 0, 0.08) 0px 1px 1px 0px, rgba(0, 0, 0, 0.05) 0px 0px 0px 1px;
+      transition: all 0.15s ease;
+    }
+    .btn-pill-secondary:hover {
+      background-color: #f5f5f5;
+    }
+    .card-blueprint {
+      background-color: #ffffff;
+      border: 1px solid #e8e8e8;
+      border-radius: 16px;
+      box-shadow: rgba(0, 0, 0, 0.06) 0px 1px 3px 0px, rgba(0, 0, 0, 0.06) 0px 8px 16px 0px, rgba(0, 0, 0, 0.02) 0px 0px 0px 1px;
+    }
+    .tag-pill {
+      border-radius: 9999px;
+      font-weight: 500;
+      font-size: 12px;
+      letter-spacing: -0.32px;
     }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-brand-500 selection:text-white">
+<body class="min-h-screen flex flex-col antialiased bg-[#fafafa] text-carbon selection:bg-lavender selection:text-white">
 
   <!-- ============================================================= -->
-  <!-- LOGIN MODAL / SCREEN -->
+  <!-- LOGIN MODAL / SCREEN (Visitors White Blueprint Style) -->
   <!-- ============================================================= -->
-  <div id="loginSection" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-md px-4">
-    <div class="glass w-full max-w-md p-8 rounded-2xl shadow-2xl border border-slate-800 relative overflow-hidden">
-      <div class="absolute -top-12 -right-12 w-36 h-36 bg-brand-600/20 rounded-full blur-2xl"></div>
-      <div class="absolute -bottom-12 -left-12 w-36 h-36 bg-emerald-600/20 rounded-full blur-2xl"></div>
+  <div id="loginSection" class="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-md px-4">
+    <div class="card-blueprint w-full max-w-md p-8 relative overflow-hidden bg-white">
+      <!-- Atmospheric decorative gradient band accent behind top -->
+      <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-sky to-lavender"></div>
 
-      <div class="text-center mb-6 relative">
-        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-500 text-white text-3xl shadow-lg shadow-brand-500/30 mb-4">
+      <div class="text-center mb-8 pt-2">
+        <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-lavender text-white text-xl shadow-subtle mb-4">
           🛡
         </div>
-        <h1 class="text-2xl font-bold tracking-tight text-white">Zynygram Admin Panel</h1>
-        <p class="text-sm text-slate-400 mt-1">Rasmiy qo‘llab-quvvatlash va verifikatsiya boshqaruvi</p>
+        <h1 class="text-2xl font-semibold tracking-tight-head text-carbon">Zynygram Admin Panel</h1>
+        <p class="text-sm text-graphite mt-1">Analytics & Verification Management Portal</p>
       </div>
 
-      <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4 relative">
+      <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
         <div>
-          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Maxfiy Admin Paroli</label>
+          <label class="block text-xs font-medium text-graphite uppercase tracking-wider mb-2">Maxfiy Admin Paroli</label>
           <div class="relative">
             <input
               type="password"
               id="adminPasswordInput"
               required
               placeholder="••••••••••••"
-              class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition text-sm"
+              class="w-full px-4 py-2.5 bg-mist border border-fog rounded-lg text-carbon placeholder-ash focus:outline-none focus:bg-white focus:border-lavender focus:ring-1 focus:ring-lavender transition text-sm"
             />
             <button
               type="button"
               onclick="togglePasswordVisibility()"
-              class="absolute right-3 top-3.5 text-slate-400 hover:text-slate-200 text-xs px-1"
+              class="absolute right-3 top-2.5 text-ash hover:text-carbon text-xs px-1"
             >
               👁
             </button>
           </div>
         </div>
 
-        <div id="loginError" class="hidden text-xs text-rose-400 bg-rose-950/50 border border-rose-800/60 p-2.5 rounded-lg"></div>
+        <div id="loginError" class="hidden text-xs text-ember bg-rose-50 border border-rose-200 p-3 rounded-lg"></div>
 
         <button
           type="submit"
           id="loginBtn"
-          class="w-full py-3 px-4 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-semibold rounded-xl shadow-lg shadow-brand-600/30 transition duration-150 flex items-center justify-center gap-2 text-sm"
+          class="w-full py-2.5 px-4 btn-pill-primary flex items-center justify-center gap-2 text-sm mt-2"
         >
           <span>Tizimga kirish</span>
           <span>→</span>
@@ -101,54 +186,53 @@ export function getAdminHtml(): string {
   <!-- MAIN APP CONTAINER -->
   <!-- ============================================================= -->
   <div id="appSection" class="hidden flex-1 flex flex-col">
-    <!-- Top Navigation Bar -->
-    <header class="sticky top-0 z-40 glass border-b border-slate-800/80 px-4 lg:px-8 py-3.5 flex items-center justify-between">
+    <!-- Top Floating Header & Navigation Pill -->
+    <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-fog px-4 lg:px-8 py-3 flex items-center justify-between">
+      <!-- Left Brand -->
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center text-xl shadow-md shadow-brand-500/20">
+        <div class="w-8 h-8 rounded-full bg-lavender flex items-center justify-center text-white text-sm shadow-subtle">
           🛡
         </div>
         <div>
           <div class="flex items-center gap-2">
-            <span class="font-extrabold text-base tracking-wide text-white">ZYNYGRAM</span>
-            <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-300 border border-brand-500/30">Admin Web</span>
+            <span class="font-semibold text-sm tracking-tight text-carbon">Visitors</span>
+            <span class="text-ash font-normal text-xs">/</span>
+            <span class="font-semibold text-xs tracking-tight text-carbon">Zynygram</span>
+            <span class="tag-pill px-2 py-0.5 bg-mint-wash text-mint text-[11px] border border-mint/20 font-semibold">Live</span>
           </div>
-          <p class="text-xs text-slate-400 flex items-center gap-1.5 mt-0.5">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span>Bot faol • Port: 3000</span>
-          </p>
         </div>
       </div>
 
-      <!-- Navigation Tabs -->
-      <nav class="hidden md:flex items-center gap-1 bg-slate-900/80 p-1 rounded-xl border border-slate-800">
-        <button onclick="switchTab('dashboard')" id="tabBtn-dashboard" class="tab-btn px-4 py-1.5 rounded-lg text-xs font-semibold transition text-white bg-brand-600 shadow-sm">
-          📊 Boshqaruv
+      <!-- Center Floating Navigation Pill (Signature Visitors Component) -->
+      <nav class="hidden md:flex items-center gap-1 bg-white p-1 rounded-full border border-fog shadow-subtle">
+        <button onclick="switchTab('dashboard')" id="tabBtn-dashboard" class="px-4 py-1.5 rounded-full text-xs font-medium transition text-white bg-lavender shadow-subtle">
+          Boshqaruv
         </button>
-        <button onclick="switchTab('verifications')" id="tabBtn-verifications" class="tab-btn px-4 py-1.5 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white flex items-center gap-1.5">
-          <span>🛡 Verifikatsiyalar</span>
-          <span id="pendingBadge" class="hidden px-1.5 py-0.2 rounded-full text-[10px] bg-amber-500 text-slate-950 font-bold">0</span>
+        <button onclick="switchTab('verifications')" id="tabBtn-verifications" class="px-4 py-1.5 rounded-full text-xs font-medium transition text-graphite hover:text-carbon flex items-center gap-1.5">
+          <span>Verifikatsiyalar</span>
+          <span id="pendingBadge" class="hidden px-1.5 py-0.2 rounded-full text-[10px] bg-amber text-white font-semibold">0</span>
         </button>
-        <button onclick="switchTab('users')" id="tabBtn-users" class="tab-btn px-4 py-1.5 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white">
-          👥 Foydalanuvchilar
+        <button onclick="switchTab('users')" id="tabBtn-users" class="px-4 py-1.5 rounded-full text-xs font-medium transition text-graphite hover:text-carbon">
+          Foydalanuvchilar
         </button>
-        <button onclick="switchTab('conversations')" id="tabBtn-conversations" class="tab-btn px-4 py-1.5 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white">
-          💬 Murojaatlar
+        <button onclick="switchTab('conversations')" id="tabBtn-conversations" class="px-4 py-1.5 rounded-full text-xs font-medium transition text-graphite hover:text-carbon">
+          Murojaatlar
         </button>
       </nav>
 
-      <!-- Action Buttons -->
+      <!-- Right Action Controls -->
       <div class="flex items-center gap-2">
         <button
           onclick="refreshCurrentData()"
           title="Ma’lumotlarni yangilash"
-          class="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:border-slate-700 transition"
+          class="w-8 h-8 rounded-full flex items-center justify-center bg-white border border-fog text-graphite hover:text-carbon hover:bg-mist transition text-xs shadow-subtle"
         >
           🔄
         </button>
         <button
           onclick="logout()"
           title="Chiqish"
-          class="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-rose-400 hover:border-rose-900/50 transition text-xs font-semibold flex items-center gap-1.5"
+          class="px-3.5 py-1.5 rounded-full bg-white border border-fog text-graphite hover:text-ember transition text-xs font-medium flex items-center gap-1.5 shadow-subtle"
         >
           <span>Chiqish</span>
           <span>🚪</span>
@@ -157,104 +241,124 @@ export function getAdminHtml(): string {
     </header>
 
     <!-- Mobile Nav Bar -->
-    <div class="md:hidden flex items-center justify-around bg-slate-900 border-b border-slate-800 p-2">
-      <button onclick="switchTab('dashboard')" class="text-xs px-2 py-1 font-semibold text-slate-300">📊 Boshqaruv</button>
-      <button onclick="switchTab('verifications')" class="text-xs px-2 py-1 font-semibold text-slate-300">🛡 Arizalar</button>
-      <button onclick="switchTab('users')" class="text-xs px-2 py-1 font-semibold text-slate-300">👥 Userlar</button>
-      <button onclick="switchTab('conversations')" class="text-xs px-2 py-1 font-semibold text-slate-300">💬 Chat</button>
+    <div class="md:hidden flex items-center justify-around bg-white border-b border-fog p-2">
+      <button onclick="switchTab('dashboard')" class="text-xs px-3 py-1 font-medium text-carbon">Boshqaruv</button>
+      <button onclick="switchTab('verifications')" class="text-xs px-3 py-1 font-medium text-graphite">Arizalar</button>
+      <button onclick="switchTab('users')" class="text-xs px-3 py-1 font-medium text-graphite">Userlar</button>
+      <button onclick="switchTab('conversations')" class="text-xs px-3 py-1 font-medium text-graphite">Chat</button>
     </div>
 
-    <!-- Main Content Area -->
-    <main class="flex-1 max-w-7xl w-full mx-auto p-4 lg:p-8">
+    <!-- Main Content Canvas (Max width 1200px per DESIGN.md) -->
+    <main class="flex-1 max-w-[1200px] w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
 
       <!-- ============================================================= -->
       <!-- VIEW 1: DASHBOARD -->
       <!-- ============================================================= -->
       <section id="view-dashboard" class="space-y-6">
-        <!-- Banner for Pending Requests -->
-        <div id="pendingAlertBanner" class="hidden p-4 rounded-2xl bg-gradient-to-r from-amber-500/15 via-amber-600/10 to-transparent border border-amber-500/30 flex items-center justify-between">
+        <!-- Announcement / Pending Chip Banner (Signature Visitors Component) -->
+        <div id="pendingAlertBanner" class="hidden card-blueprint p-4 bg-white border-l-4 border-l-amber flex items-center justify-between">
           <div class="flex items-center gap-3">
-            <span class="text-2xl">⏳</span>
+            <span class="tag-pill px-2.5 py-1 bg-amber/15 text-amber text-xs font-semibold">DIQQAT</span>
             <div>
-              <h4 class="text-sm font-bold text-amber-200" id="pendingBannerTitle">Kutilayotgan arizalar mavjud</h4>
-              <p class="text-xs text-amber-300/80">Foydalanuvchilar tasdiqlash nishoni olish uchun isbot yuborishgan.</p>
+              <h4 class="text-xs font-semibold text-carbon" id="pendingBannerTitle">Kutilayotgan arizalar mavjud</h4>
+              <p class="text-xs text-graphite">Foydalanuvchilar tasdiqlash nishoni olish uchun isbot yuborishgan.</p>
             </div>
           </div>
-          <button onclick="switchTab('verifications')" class="px-3.5 py-1.5 rounded-xl bg-amber-500 text-slate-950 text-xs font-bold hover:bg-amber-400 transition">
+          <button onclick="switchTab('verifications')" class="btn-pill-primary text-xs px-4 py-1.5">
             Ko‘rib chiqish →
           </button>
         </div>
 
-        <!-- Metric Stat Cards -->
+        <!-- Metric Callout Cards Grid (DESIGN.md specification: 16px radius, 12-16px padding, Mint delta) -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div class="glass p-5 rounded-2xl border border-slate-800">
-            <div class="flex items-center justify-between text-slate-400 text-xs font-medium mb-2">
+          <!-- Stat 1: Total Users -->
+          <div class="card-blueprint p-4 bg-white">
+            <div class="flex items-center justify-between text-ash text-xs font-normal mb-1">
               <span>Jami Foydalanuvchilar</span>
-              <span class="text-lg">👥</span>
+              <span class="w-2 h-2 rounded-full bg-sky"></span>
             </div>
-            <div class="text-2xl font-black text-white" id="stat-total-users">-</div>
-            <p class="text-[11px] text-slate-500 mt-1">Bot bilan muloqot qilganlar</p>
+            <div class="text-2xl font-semibold text-carbon tracking-tight" id="stat-total-users">-</div>
+            <div class="mt-2 flex items-center gap-1.5 text-[11px]">
+              <span class="tag-pill px-2 py-0.5 bg-mint-wash text-mint font-semibold">+100% faol</span>
+              <span class="text-ash">tizimda</span>
+            </div>
           </div>
 
-          <div class="glass p-5 rounded-2xl border border-slate-800">
-            <div class="flex items-center justify-between text-slate-400 text-xs font-medium mb-2">
+          <!-- Stat 2: Pending Verifications -->
+          <div class="card-blueprint p-4 bg-white">
+            <div class="flex items-center justify-between text-ash text-xs font-normal mb-1">
               <span>Kutilayotgan Arizalar</span>
-              <span class="text-lg">⏳</span>
+              <span class="w-2 h-2 rounded-full bg-amber"></span>
             </div>
-            <div class="text-2xl font-black text-amber-400" id="stat-pending-v">-</div>
-            <p class="text-[11px] text-amber-500/80 mt-1">Ko‘rib chiqilishi kerak</p>
+            <div class="text-2xl font-semibold text-carbon tracking-tight" id="stat-pending-v">-</div>
+            <div class="mt-2 flex items-center gap-1.5 text-[11px]">
+              <span class="tag-pill px-2 py-0.5 bg-amber/10 text-amber font-semibold">Ko‘rib chiqish</span>
+              <span class="text-ash">kutmoqda</span>
+            </div>
           </div>
 
-          <div class="glass p-5 rounded-2xl border border-slate-800">
-            <div class="flex items-center justify-between text-slate-400 text-xs font-medium mb-2">
+          <!-- Stat 3: Approved Badges -->
+          <div class="card-blueprint p-4 bg-white">
+            <div class="flex items-center justify-between text-ash text-xs font-normal mb-1">
               <span>Tasdiqlangan Nishonlar</span>
-              <span class="text-lg">🛡</span>
+              <span class="w-2 h-2 rounded-full bg-mint"></span>
             </div>
-            <div class="text-2xl font-black text-emerald-400" id="stat-approved-v">-</div>
-            <p class="text-[11px] text-emerald-500/80 mt-1">Muvaffaqiyatli berilgan</p>
+            <div class="text-2xl font-semibold text-carbon tracking-tight" id="stat-approved-v">-</div>
+            <div class="mt-2 flex items-center gap-1.5 text-[11px]">
+              <span class="tag-pill px-2 py-0.5 bg-mint-wash text-mint font-semibold">Muvaffaqiyatli</span>
+              <span class="text-ash">tasdiqlangan</span>
+            </div>
           </div>
 
-          <div class="glass p-5 rounded-2xl border border-slate-800">
-            <div class="flex items-center justify-between text-slate-400 text-xs font-medium mb-2">
+          <!-- Stat 4: Support Conversations -->
+          <div class="card-blueprint p-4 bg-white">
+            <div class="flex items-center justify-between text-ash text-xs font-normal mb-1">
               <span>Muloqotlar & Chat</span>
-              <span class="text-lg">💬</span>
+              <span class="w-2 h-2 rounded-full bg-lavender"></span>
             </div>
-            <div class="text-2xl font-black text-indigo-400" id="stat-total-convs">-</div>
-            <p class="text-[11px] text-slate-500 mt-1">Jami ochilgan suhbatlar</p>
+            <div class="text-2xl font-semibold text-carbon tracking-tight" id="stat-total-convs">-</div>
+            <div class="mt-2 flex items-center gap-1.5 text-[11px]">
+              <span class="tag-pill px-2 py-0.5 bg-mist text-graphite font-semibold">Operator & AI</span>
+              <span class="text-ash">yozishmalari</span>
+            </div>
           </div>
         </div>
 
-        <!-- Split Grid: Recent Verifications & Recent Users -->
+        <!-- Split 2-Column Grid: Recent Verifications & Recent Users -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <!-- Recent Verifications Table -->
-          <div class="glass p-6 rounded-2xl border border-slate-800 flex flex-col">
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                <span>🛡</span>
-                <span>So‘nggi Tasdiqlash Arizalari</span>
-              </h3>
-              <button onclick="switchTab('verifications')" class="text-xs text-brand-400 hover:text-brand-300 font-semibold">
+          <!-- Recent Verifications Panel -->
+          <div class="card-blueprint p-6 bg-white flex flex-col">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-fog">
+              <div class="flex items-center gap-2">
+                <div class="w-6 h-6 rounded-full bg-lavender/20 text-lavender flex items-center justify-center text-xs font-bold">
+                  🛡
+                </div>
+                <h3 class="text-sm font-semibold text-carbon">So‘nggi Tasdiqlash Arizalari</h3>
+              </div>
+              <button onclick="switchTab('verifications')" class="text-xs text-lavender hover:underline font-medium">
                 Barchasi →
               </button>
             </div>
-            <div id="dashboardRecentVerifications" class="space-y-3 flex-1">
-              <p class="text-xs text-slate-500 py-4 text-center">Yuklanmoqda...</p>
+            <div id="dashboardRecentVerifications" class="space-y-2.5 flex-1">
+              <p class="text-xs text-ash py-4 text-center">Yuklanmoqda...</p>
             </div>
           </div>
 
-          <!-- Recent Users Table -->
-          <div class="glass p-6 rounded-2xl border border-slate-800 flex flex-col">
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                <span>👥</span>
-                <span>Yangi Foydalanuvchilar</span>
-              </h3>
-              <button onclick="switchTab('users')" class="text-xs text-brand-400 hover:text-brand-300 font-semibold">
+          <!-- Recent Users Panel -->
+          <div class="card-blueprint p-6 bg-white flex flex-col">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-fog">
+              <div class="flex items-center gap-2">
+                <div class="w-6 h-6 rounded-full bg-sky/15 text-sky flex items-center justify-center text-xs font-bold">
+                  👥
+                </div>
+                <h3 class="text-sm font-semibold text-carbon">Yangi Ro‘yxatdan O‘tganlar</h3>
+              </div>
+              <button onclick="switchTab('users')" class="text-xs text-lavender hover:underline font-medium">
                 Barchasi →
               </button>
             </div>
-            <div id="dashboardRecentUsers" class="space-y-3 flex-1">
-              <p class="text-xs text-slate-500 py-4 text-center">Yuklanmoqda...</p>
+            <div id="dashboardRecentUsers" class="space-y-2.5 flex-1">
+              <p class="text-xs text-ash py-4 text-center">Yuklanmoqda...</p>
             </div>
           </div>
         </div>
@@ -264,20 +368,20 @@ export function getAdminHtml(): string {
       <!-- VIEW 2: VERIFICATIONS -->
       <!-- ============================================================= -->
       <section id="view-verifications" class="hidden space-y-6">
-        <!-- Filter and Search Header -->
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 glass p-4 rounded-2xl border border-slate-800">
-          <!-- Status Filters -->
-          <div class="flex items-center gap-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800 overflow-x-auto">
-            <button onclick="setVerificationFilter('')" id="vFilter-ALL" class="v-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white">
+        <!-- Filter & Search Toolbar -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 card-blueprint p-4 bg-white">
+          <!-- Status Pill Filters -->
+          <div class="flex items-center gap-1 bg-mist p-1 rounded-full border border-fog overflow-x-auto">
+            <button onclick="setVerificationFilter('')" id="vFilter-ALL" class="v-filter-btn px-4 py-1 rounded-full text-xs font-medium text-graphite hover:text-carbon">
               Barchasi
             </button>
-            <button onclick="setVerificationFilter('PENDING')" id="vFilter-PENDING" class="v-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-brand-600">
+            <button onclick="setVerificationFilter('PENDING')" id="vFilter-PENDING" class="v-filter-btn px-4 py-1 rounded-full text-xs font-medium text-white bg-lavender shadow-subtle">
               ⏳ Kutilayotgan
             </button>
-            <button onclick="setVerificationFilter('APPROVED')" id="vFilter-APPROVED" class="v-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white">
+            <button onclick="setVerificationFilter('APPROVED')" id="vFilter-APPROVED" class="v-filter-btn px-4 py-1 rounded-full text-xs font-medium text-graphite hover:text-carbon">
               ✅ Tasdiqlangan
             </button>
-            <button onclick="setVerificationFilter('REJECTED')" id="vFilter-REJECTED" class="v-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white">
+            <button onclick="setVerificationFilter('REJECTED')" id="vFilter-REJECTED" class="v-filter-btn px-4 py-1 rounded-full text-xs font-medium text-graphite hover:text-carbon">
               ❌ Rad etilgan
             </button>
           </div>
@@ -289,23 +393,23 @@ export function getAdminHtml(): string {
               id="vSearchInput"
               oninput="debounceSearchVerifications()"
               placeholder="Username, nik yoki ID..."
-              class="w-full pl-9 pr-4 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition"
+              class="w-full pl-9 pr-4 py-2 bg-mist border border-fog rounded-full text-xs text-carbon placeholder-ash focus:outline-none focus:bg-white focus:border-lavender focus:ring-1 focus:ring-lavender transition"
             />
-            <span class="absolute left-3 top-2.5 text-xs text-slate-500">🔍</span>
+            <span class="absolute left-3.5 top-2.5 text-xs text-ash">🔍</span>
           </div>
         </div>
 
-        <!-- Verification Cards Container -->
+        <!-- Verification Cards Grid -->
         <div id="verificationCardsList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <!-- Dynamic cards inserted here -->
         </div>
 
         <!-- Pagination -->
-        <div id="vPagination" class="flex items-center justify-between py-2 text-xs text-slate-400">
+        <div id="vPagination" class="flex items-center justify-between py-2 text-xs text-graphite">
           <span id="vPageInfo">Sahifa 1</span>
           <div class="flex gap-2">
-            <button id="vPrevBtn" onclick="changeVPage(-1)" class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 disabled:opacity-40">Oldingi</button>
-            <button id="vNextBtn" onclick="changeVPage(1)" class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 disabled:opacity-40">Keyingi</button>
+            <button id="vPrevBtn" onclick="changeVPage(-1)" class="btn-pill-secondary px-4 py-1 text-xs disabled:opacity-40">Oldingi</button>
+            <button id="vNextBtn" onclick="changeVPage(1)" class="btn-pill-secondary px-4 py-1 text-xs disabled:opacity-40">Keyingi</button>
           </div>
         </div>
       </section>
@@ -314,11 +418,10 @@ export function getAdminHtml(): string {
       <!-- VIEW 3: USERS -->
       <!-- ============================================================= -->
       <section id="view-users" class="hidden space-y-6">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 glass p-4 rounded-2xl border border-slate-800">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 card-blueprint p-4 bg-white">
           <div class="flex items-center gap-2">
-            <span class="text-lg">👥</span>
-            <h3 class="text-sm font-bold text-white">Barcha Foydalanuvchilar</h3>
-            <span id="usersTotalBadge" class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 font-semibold">0 ta</span>
+            <h3 class="text-sm font-semibold text-carbon">Foydalanuvchilar Bazasi</h3>
+            <span id="usersTotalBadge" class="tag-pill px-2.5 py-0.5 bg-mist text-graphite text-xs font-medium border border-fog">0 ta</span>
           </div>
 
           <div class="relative w-full sm:w-80">
@@ -327,27 +430,27 @@ export function getAdminHtml(): string {
               id="usersSearchInput"
               oninput="debounceSearchUsers()"
               placeholder="Ism, @username yoki Telegram ID..."
-              class="w-full pl-9 pr-4 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition"
+              class="w-full pl-9 pr-4 py-2 bg-mist border border-fog rounded-full text-xs text-carbon placeholder-ash focus:outline-none focus:bg-white focus:border-lavender focus:ring-1 focus:ring-lavender transition"
             />
-            <span class="absolute left-3 top-2.5 text-xs text-slate-500">🔍</span>
+            <span class="absolute left-3.5 top-2.5 text-xs text-ash">🔍</span>
           </div>
         </div>
 
-        <!-- Users Table -->
-        <div class="glass rounded-2xl border border-slate-800 overflow-hidden">
+        <!-- Users Table (DESIGN.md specification: 24px container radius, 1px Fog gridlines, Carbon headers, Graphite body) -->
+        <div class="bg-white border border-fog rounded-[24px] overflow-hidden shadow-subtle-2">
           <div class="overflow-x-auto">
             <table class="w-full text-left text-xs">
-              <thead class="bg-slate-900/80 text-slate-400 uppercase tracking-wider text-[10px] border-b border-slate-800">
+              <thead class="bg-linen text-carbon uppercase tracking-wider text-[10px] border-b border-fog font-semibold">
                 <tr>
-                  <th class="py-3.5 px-4 font-semibold">Foydalanuvchi</th>
-                  <th class="py-3.5 px-4 font-semibold">Telegram ID</th>
-                  <th class="py-3.5 px-4 font-semibold">Nishon (Status)</th>
-                  <th class="py-3.5 px-4 font-semibold">Holati</th>
-                  <th class="py-3.5 px-4 font-semibold">Sana</th>
-                  <th class="py-3.5 px-4 font-semibold text-right">Amallar</th>
+                  <th class="py-3 px-5 font-semibold">Foydalanuvchi</th>
+                  <th class="py-3 px-5 font-semibold">Telegram ID</th>
+                  <th class="py-3 px-5 font-semibold">Nishon (Status)</th>
+                  <th class="py-3 px-5 font-semibold">Holati</th>
+                  <th class="py-3 px-5 font-semibold">Sana</th>
+                  <th class="py-3 px-5 font-semibold text-right">Amallar</th>
                 </tr>
               </thead>
-              <tbody id="usersTableBody" class="divide-y divide-slate-800/60">
+              <tbody id="usersTableBody" class="divide-y divide-fog text-graphite">
                 <!-- User rows inserted here -->
               </tbody>
             </table>
@@ -355,11 +458,11 @@ export function getAdminHtml(): string {
         </div>
 
         <!-- Users Pagination -->
-        <div class="flex items-center justify-between py-2 text-xs text-slate-400">
+        <div class="flex items-center justify-between py-2 text-xs text-graphite">
           <span id="usersPageInfo">Sahifa 1</span>
           <div class="flex gap-2">
-            <button id="usersPrevBtn" onclick="changeUsersPage(-1)" class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 disabled:opacity-40">Oldingi</button>
-            <button id="usersNextBtn" onclick="changeUsersPage(1)" class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 disabled:opacity-40">Keyingi</button>
+            <button id="usersPrevBtn" onclick="changeUsersPage(-1)" class="btn-pill-secondary px-4 py-1 text-xs disabled:opacity-40">Oldingi</button>
+            <button id="usersNextBtn" onclick="changeUsersPage(1)" class="btn-pill-secondary px-4 py-1 text-xs disabled:opacity-40">Keyingi</button>
           </div>
         </div>
       </section>
@@ -370,60 +473,60 @@ export function getAdminHtml(): string {
       <section id="view-conversations" class="hidden space-y-6">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[720px]">
           <!-- Conversations List (4 cols) -->
-          <div class="lg:col-span-4 glass rounded-2xl border border-slate-800 flex flex-col overflow-hidden">
-            <div class="p-4 border-b border-slate-800 flex items-center justify-between">
-              <h3 class="text-sm font-bold text-white flex items-center gap-2">
+          <div class="lg:col-span-4 card-blueprint bg-white flex flex-col overflow-hidden">
+            <div class="p-4 border-b border-fog flex items-center justify-between">
+              <h3 class="text-sm font-semibold text-carbon flex items-center gap-2">
                 <span>💬</span>
                 <span>Murojaatlar</span>
               </h3>
-              <span id="convsCountBadge" class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 font-semibold">0</span>
+              <span id="convsCountBadge" class="tag-pill px-2 py-0.5 bg-mist text-graphite text-xs font-semibold">0</span>
             </div>
-            <div id="conversationsListContainer" class="flex-1 overflow-y-auto divide-y divide-slate-800/60">
-              <p class="text-xs text-slate-500 p-4 text-center">Yuklanmoqda...</p>
+            <div id="conversationsListContainer" class="flex-1 overflow-y-auto divide-y divide-fog">
+              <p class="text-xs text-ash p-4 text-center">Yuklanmoqda...</p>
             </div>
           </div>
 
           <!-- Chat Detail & Messages (8 cols) -->
-          <div class="lg:col-span-8 glass rounded-2xl border border-slate-800 flex flex-col overflow-hidden">
+          <div class="lg:col-span-8 card-blueprint bg-white flex flex-col overflow-hidden">
             <!-- Chat Header -->
-            <div id="chatHeader" class="p-4 border-b border-slate-800 flex items-center justify-between">
+            <div id="chatHeader" class="p-4 border-b border-fog flex items-center justify-between bg-linen">
               <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl bg-slate-800 flex items-center justify-center text-sm font-bold text-brand-300">
+                <div class="w-8 h-8 rounded-full bg-white border border-fog flex items-center justify-center text-xs font-bold text-carbon shadow-subtle">
                   👤
                 </div>
                 <div>
-                  <h4 id="chatActiveUser" class="text-xs font-bold text-white">Suhbatni tanlang</h4>
-                  <p id="chatActiveMeta" class="text-[10px] text-slate-400">Yozishmalarni ko‘rish uchun ro‘yxatdan suhbat ustiga bosing</p>
+                  <h4 id="chatActiveUser" class="text-xs font-semibold text-carbon">Suhbatni tanlang</h4>
+                  <p id="chatActiveMeta" class="text-[11px] text-ash">Yozishmalarni ko‘rish uchun ro‘yxatdan suhbat ustiga bosing</p>
                 </div>
               </div>
               <div id="chatHeaderActions" class="hidden">
-                <button onclick="closeCurrentConversation()" class="px-3 py-1 rounded-lg bg-slate-900 border border-slate-800 text-[11px] font-semibold text-slate-400 hover:text-rose-400 transition">
+                <button onclick="closeCurrentConversation()" class="btn-pill-secondary px-3 py-1 text-xs font-medium text-graphite hover:text-ember">
                   Suhbatni yopish
                 </button>
               </div>
             </div>
 
             <!-- Messages Stream -->
-            <div id="chatMessagesStream" class="flex-1 p-4 overflow-y-auto space-y-3 bg-slate-950/40">
-              <div class="h-full flex items-center justify-center text-xs text-slate-500">
+            <div id="chatMessagesStream" class="flex-1 p-5 overflow-y-auto space-y-3 bg-linen/50">
+              <div class="h-full flex items-center justify-center text-xs text-ash">
                 Suhbat tanlanmagan
               </div>
             </div>
 
             <!-- Reply Box -->
-            <form id="chatReplyForm" onsubmit="handleSendOperatorReply(event)" class="p-3 border-t border-slate-800 flex gap-2 bg-slate-900/60">
+            <form id="chatReplyForm" onsubmit="handleSendOperatorReply(event)" class="p-3.5 border-t border-fog flex gap-2 bg-white">
               <input
                 type="text"
                 id="chatReplyInput"
                 disabled
                 placeholder="Foydalanuvchiga operator nomidan javob yozish..."
-                class="flex-1 px-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 disabled:opacity-40 transition"
+                class="flex-1 px-4 py-2 bg-mist border border-fog rounded-full text-xs text-carbon placeholder-ash focus:outline-none focus:bg-white focus:border-lavender focus:ring-1 focus:ring-lavender disabled:opacity-40 transition"
               />
               <button
                 type="submit"
                 id="chatReplyBtn"
                 disabled
-                class="px-4 py-2.5 bg-brand-600 hover:bg-brand-500 disabled:opacity-40 text-white font-semibold rounded-xl text-xs transition flex items-center gap-1.5"
+                class="btn-pill-primary px-5 py-2 disabled:opacity-40 text-xs flex items-center gap-1.5"
               >
                 <span>Yuborish</span>
                 <span>📤</span>
@@ -439,13 +542,13 @@ export function getAdminHtml(): string {
   <!-- ============================================================= -->
   <!-- PHOTO PREVIEW MODAL -->
   <!-- ============================================================= -->
-  <div id="photoModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-md p-4" onclick="closePhotoModal()">
-    <div class="relative max-w-4xl max-h-[90vh] flex flex-col items-center" onclick="event.stopPropagation()">
-      <button onclick="closePhotoModal()" class="absolute -top-10 right-0 text-white text-sm font-bold bg-slate-800 hover:bg-slate-700 px-3 py-1 rounded-full transition">
-        ✕ Yopish
+  <div id="photoModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-carbon/60 backdrop-blur-sm p-4" onclick="closePhotoModal()">
+    <div class="relative max-w-3xl max-h-[90vh] flex flex-col items-center bg-white p-3 rounded-2xl shadow-subtle-3 border border-fog" onclick="event.stopPropagation()">
+      <button onclick="closePhotoModal()" class="absolute -top-3 -right-3 text-carbon text-xs font-semibold bg-white border border-fog hover:bg-mist w-7 h-7 rounded-full shadow-subtle flex items-center justify-center transition">
+        ✕
       </button>
-      <img id="photoModalImg" src="" alt="Isbot skrinshoti" class="max-h-[80vh] max-w-full rounded-2xl shadow-2xl border border-slate-700 object-contain" />
-      <p class="text-xs text-slate-400 mt-2">📸 Foydalanuvchi yuborgan skrinshot / isbot rasmi</p>
+      <img id="photoModalImg" src="" alt="Isbot skrinshoti" class="max-h-[75vh] max-w-full rounded-xl object-contain" />
+      <p class="text-xs text-graphite mt-3">📸 Foydalanuvchi yuborgan skrinshot / isbot rasmi</p>
     </div>
   </div>
 
@@ -562,9 +665,9 @@ export function getAdminHtml(): string {
         const btn = document.getElementById('tabBtn-' + t);
         if (btn) {
           if (t === tab) {
-            btn.className = 'tab-btn px-4 py-1.5 rounded-lg text-xs font-semibold transition text-white bg-brand-600 shadow-sm';
+            btn.className = 'px-4 py-1.5 rounded-full text-xs font-medium transition text-white bg-lavender shadow-subtle';
           } else {
-            btn.className = 'tab-btn px-4 py-1.5 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white flex items-center gap-1.5';
+            btn.className = 'px-4 py-1.5 rounded-full text-xs font-medium transition text-graphite hover:text-carbon flex items-center gap-1.5';
           }
         }
       });
@@ -632,7 +735,7 @@ export function getAdminHtml(): string {
         if (data.recentVerifications && data.recentVerifications.length > 0) {
           rVCont.innerHTML = data.recentVerifications.map(req => renderMiniVerificationRow(req)).join('');
         } else {
-          rVCont.innerHTML = '<p class="text-xs text-slate-500 py-4 text-center">Yangi arizalar mavjud emas</p>';
+          rVCont.innerHTML = '<p class="text-xs text-ash py-4 text-center">Yangi arizalar mavjud emas</p>';
         }
 
         // Recent Users
@@ -640,7 +743,7 @@ export function getAdminHtml(): string {
         if (data.recentUsers && data.recentUsers.length > 0) {
           rUCont.innerHTML = data.recentUsers.map(u => renderMiniUserRow(u)).join('');
         } else {
-          rUCont.innerHTML = '<p class="text-xs text-slate-500 py-4 text-center">Foydalanuvchilar mavjud emas</p>';
+          rUCont.innerHTML = '<p class="text-xs text-ash py-4 text-center">Foydalanuvchilar mavjud emas</p>';
         }
 
       } catch (err) {
@@ -652,26 +755,26 @@ export function getAdminHtml(): string {
       const userHandle = req.user?.username ? '@' + req.user.username : (req.user?.firstName || 'Foydalanuvchi');
       const time = new Date(req.createdAt).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' });
       const statusBadge = req.status === 'APPROVED'
-        ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">Tasdiqlangan</span>'
+        ? '<span class="tag-pill px-2.5 py-0.5 bg-mint-wash text-mint font-semibold">Tasdiqlangan</span>'
         : req.status === 'REJECTED'
-          ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400">Rad etilgan</span>'
-          : '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 animate-pulse">Kutilmoqda</span>';
+          ? '<span class="tag-pill px-2.5 py-0.5 bg-rose-50 text-ember font-semibold">Rad etilgan</span>'
+          : '<span class="tag-pill px-2.5 py-0.5 bg-amber/15 text-amber font-semibold">Kutilmoqda</span>';
 
       return \`
-        <div class="p-3 rounded-xl bg-slate-900/70 border border-slate-800/80 flex items-center justify-between gap-3">
+        <div class="p-3 rounded-xl bg-linen border border-fog flex items-center justify-between gap-3">
           <div class="flex items-center gap-2.5">
-            <div class="w-8 h-8 rounded-lg bg-brand-600/20 text-brand-300 flex items-center justify-center text-xs font-bold">
+            <div class="w-8 h-8 rounded-full bg-white border border-fog text-lavender flex items-center justify-center text-xs font-bold shadow-subtle">
               🛡
             </div>
             <div>
-              <p class="text-xs font-bold text-white">\${escapeHtml(userHandle)}</p>
-              <p class="text-[10px] text-slate-400">\${time} • ID: \${req.user?.telegramId || ''}</p>
+              <p class="text-xs font-semibold text-carbon">\${escapeHtml(userHandle)}</p>
+              <p class="text-[11px] text-ash">\${time} • ID: \${req.user?.telegramId || ''}</p>
             </div>
           </div>
           <div class="flex items-center gap-2">
             \${statusBadge}
             \${req.status === 'PENDING' ? \`
-              <button onclick="quickApprove('\${req.id}')" class="px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold transition">
+              <button onclick="quickApprove('\${req.id}')" class="btn-pill-primary px-3 py-1 text-[11px]">
                 Tasdiqlash
               </button>
             \` : ''}
@@ -684,18 +787,18 @@ export function getAdminHtml(): string {
       const name = u.firstName || u.username || 'Foydalanuvchi';
       const handle = u.username ? '@' + u.username : 'ID: ' + u.telegramId;
       return \`
-        <div class="p-3 rounded-xl bg-slate-900/70 border border-slate-800/80 flex items-center justify-between">
+        <div class="p-3 rounded-xl bg-linen border border-fog flex items-center justify-between">
           <div class="flex items-center gap-2.5">
-            <div class="w-8 h-8 rounded-lg bg-slate-800 text-slate-300 flex items-center justify-center text-xs font-bold">
+            <div class="w-8 h-8 rounded-full bg-white border border-fog text-graphite flex items-center justify-center text-xs font-bold shadow-subtle">
               👤
             </div>
             <div>
-              <p class="text-xs font-bold text-white">\${escapeHtml(name)} \${u.isVerified ? '🛡' : ''}</p>
-              <p class="text-[10px] text-slate-400">\${escapeHtml(handle)}</p>
+              <p class="text-xs font-semibold text-carbon">\${escapeHtml(name)} \${u.isVerified ? '🛡' : ''}</p>
+              <p class="text-[11px] text-ash">\${escapeHtml(handle)}</p>
             </div>
           </div>
-          <span class="text-[10px] \${u.isBlocked ? 'text-rose-400' : 'text-emerald-400'}">
-            \${u.isBlocked ? '🚫 Bloklangan' : '✅ Faol'}
+          <span class="tag-pill px-2.5 py-0.5 \${u.isBlocked ? 'bg-rose-50 text-ember' : 'bg-mint-wash text-mint'} font-medium">
+            \${u.isBlocked ? 'Bloklangan' : 'Faol'}
           </span>
         </div>
       \`;
@@ -711,9 +814,9 @@ export function getAdminHtml(): string {
         const btn = document.getElementById('vFilter-' + f);
         if (btn) {
           if ((!filter && f === 'ALL') || filter === f) {
-            btn.className = 'v-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-brand-600 shadow-sm';
+            btn.className = 'v-filter-btn px-4 py-1 rounded-full text-xs font-medium text-white bg-lavender shadow-subtle';
           } else {
-            btn.className = 'v-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white';
+            btn.className = 'v-filter-btn px-4 py-1 rounded-full text-xs font-medium text-graphite hover:text-carbon';
           }
         }
       });
@@ -736,7 +839,7 @@ export function getAdminHtml(): string {
 
     async function loadVerifications() {
       const container = document.getElementById('verificationCardsList');
-      container.innerHTML = '<div class="col-span-full py-10 text-center text-xs text-slate-500">Yuklanmoqda...</div>';
+      container.innerHTML = '<div class="col-span-full py-10 text-center text-xs text-ash">Yuklanmoqda...</div>';
 
       try {
         const query = new URLSearchParams({
@@ -752,7 +855,7 @@ export function getAdminHtml(): string {
         if (data.requests && data.requests.length > 0) {
           container.innerHTML = data.requests.map(req => renderVerificationCard(req)).join('');
         } else {
-          container.innerHTML = '<div class="col-span-full py-12 text-center text-slate-500 text-xs">Hech qanday ariza topilmadi</div>';
+          container.innerHTML = '<div class="col-span-full py-12 text-center text-ash text-xs">Hech qanday ariza topilmadi</div>';
         }
 
         document.getElementById('vPageInfo').textContent = 'Sahifa ' + data.page + ' / ' + (data.totalPages || 1) + ' (Jami: ' + data.total + ')';
@@ -760,7 +863,7 @@ export function getAdminHtml(): string {
         document.getElementById('vNextBtn').disabled = data.page >= data.totalPages;
 
       } catch (err) {
-        container.innerHTML = '<div class="col-span-full py-8 text-center text-rose-400 text-xs">Xatolik: Arizalarni yuklab bo‘lmadi</div>';
+        container.innerHTML = '<div class="col-span-full py-8 text-center text-ember text-xs">Xatolik: Arizalarni yuklab bo‘lmadi</div>';
       }
     }
 
@@ -772,69 +875,69 @@ export function getAdminHtml(): string {
 
       let statusBadge = '';
       if (req.status === 'APPROVED') {
-        statusBadge = '<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">✅ Tasdiqlangan</span>';
+        statusBadge = '<span class="tag-pill px-3 py-1 bg-mint-wash text-mint font-semibold border border-mint/20">✅ Tasdiqlangan</span>';
       } else if (req.status === 'REJECTED') {
-        statusBadge = '<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">❌ Rad etilgan</span>';
+        statusBadge = '<span class="tag-pill px-3 py-1 bg-rose-50 text-ember font-semibold border border-rose-200">❌ Rad etilgan</span>';
       } else {
-        statusBadge = '<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 animate-pulse">⏳ Kutilmoqda</span>';
+        statusBadge = '<span class="tag-pill px-3 py-1 bg-amber/10 text-amber font-semibold border border-amber/20">⏳ Kutilmoqda</span>';
       }
 
       // Format proof text with clickable links
       let formattedProof = escapeHtml(req.proofText || '(Isbot matni yo‘q)');
       formattedProof = formattedProof.replace(
         /(https?:\\/\\/[^\\s]+)/g,
-        '<a href="$1" target="_blank" class="text-brand-400 underline hover:text-brand-300 font-medium break-all">$1</a>'
+        '<a href="$1" target="_blank" class="text-sky hover:underline font-medium break-all">$1</a>'
       );
 
       const hasPhoto = !!req.photoFileId;
       const photoHtml = hasPhoto
         ? \`
-          <div class="mt-3 relative group">
-            <div class="text-[11px] font-bold text-slate-400 mb-1 flex items-center gap-1">
+          <div class="mt-3">
+            <div class="text-[11px] font-medium text-graphite mb-1 flex items-center gap-1">
               <span>📸</span>
               <span>Ilova qilingan skrinshot:</span>
             </div>
-            <div onclick="openPhotoModal('/api/admin/photo/\${req.photoFileId}')" class="cursor-pointer overflow-hidden rounded-xl border border-slate-700 bg-slate-900 max-h-48 flex items-center justify-center group-hover:border-brand-500 transition">
-              <img src="/api/admin/photo/\${req.photoFileId}" alt="Isbot" class="object-cover w-full h-48 group-hover:scale-105 transition duration-200" />
+            <div onclick="openPhotoModal('/api/admin/photo/\${req.photoFileId}')" class="cursor-pointer overflow-hidden rounded-lg border border-fog bg-mist max-h-48 flex items-center justify-center hover:border-lavender transition">
+              <img src="/api/admin/photo/\${req.photoFileId}" alt="Isbot" class="object-cover w-full h-48 hover:scale-[1.02] transition duration-200" />
             </div>
-            <p class="text-[10px] text-slate-500 mt-1 text-center group-hover:text-brand-300">🔎 Kattalashtirib ko‘rish uchun bosing</p>
+            <p class="text-[10px] text-ash mt-1 text-center">🔎 Kattalashtirib ko‘rish uchun bosing</p>
           </div>
         \`
         : '';
 
       return \`
-        <div class="glass p-5 rounded-2xl border border-slate-800 flex flex-col justify-between hover:border-slate-700 transition">
+        <div class="card-blueprint p-5 bg-white flex flex-col justify-between hover:border-graphite/40 transition">
           <div>
             <!-- Header Row -->
-            <div class="flex items-start justify-between gap-3 pb-3 border-b border-slate-800/80">
+            <div class="flex items-start justify-between gap-3 pb-3 border-b border-fog">
               <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-slate-800 to-slate-700 flex items-center justify-center text-base font-bold text-brand-300">
+                <div class="w-10 h-10 rounded-full bg-mist border border-fog flex items-center justify-center text-sm font-semibold text-carbon shadow-subtle">
                   👤
                 </div>
                 <div>
-                  <h4 class="text-sm font-bold text-white">\${escapeHtml(userName)}</h4>
-                  <p class="text-xs text-brand-400 font-medium">\${escapeHtml(userHandle)} • ID: \${req.user?.telegramId || ''}</p>
+                  <h4 class="text-sm font-semibold text-carbon">\${escapeHtml(userName)}</h4>
+                  <p class="text-xs text-graphite">\${escapeHtml(userHandle)} • ID: \${req.user?.telegramId || ''}</p>
                 </div>
               </div>
               \${statusBadge}
             </div>
 
             <!-- Meta info: Zynygram Profile & Date -->
-            <div class="grid grid-cols-2 gap-2 my-3 p-2.5 rounded-xl bg-slate-900/80 border border-slate-800/60 text-xs">
+            <div class="grid grid-cols-2 gap-2 my-3 p-3 rounded-lg bg-linen border border-fog text-xs">
               <div>
-                <span class="text-[10px] text-slate-400 block">Zynygram Profili:</span>
-                <span class="font-bold text-brand-300">\${zynygramDisplay ? escapeHtml(zynygramDisplay) : '<i class="text-slate-500 font-normal">Belgilanmagan</i>'}</span>
+                <span class="text-[10px] text-ash block">Zynygram Profili:</span>
+                <span class="font-semibold text-lavender">\${zynygramDisplay ? escapeHtml(zynygramDisplay) : '<i class="text-ash font-normal">Belgilanmagan</i>'}</span>
               </div>
               <div>
-                <span class="text-[10px] text-slate-400 block">Yuborilgan vaqt:</span>
-                <span class="text-slate-300 font-medium text-[11px]">\${dateStr}</span>
+                <span class="text-[10px] text-ash block">Yuborilgan vaqt:</span>
+                <span class="text-carbon font-medium text-[11px]">\${dateStr}</span>
               </div>
             </div>
 
             <!-- Proof Content -->
-            <div class="text-xs text-slate-300 leading-relaxed bg-slate-900/40 p-3 rounded-xl border border-slate-800/40">
-              <p class="text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-1">Murojaat / Isbot matni:</p>
-              <div>\${formattedProof}</div>
+            <div class="text-xs text-graphite leading-relaxed bg-mist/60 p-3 rounded-lg border border-fog">
+              <p class="text-[10px] font-semibold uppercase text-ash tracking-wider mb-1">Murojaat / Isbot matni:</p>
+              <div class="text-carbon">\${formattedProof}</div>
             </div>
 
             <!-- Screenshot / Photo Preview -->
@@ -843,17 +946,17 @@ export function getAdminHtml(): string {
 
           <!-- Actions Footer -->
           \${req.status === 'PENDING' ? \`
-            <div class="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-slate-800/80">
+            <div class="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-fog">
               <button
                 onclick="approveVerification('\${req.id}')"
-                class="py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md shadow-emerald-900/30 transition flex items-center justify-center gap-1.5"
+                class="btn-pill-primary py-2 text-xs flex items-center justify-center gap-1.5"
               >
                 <span>✅</span>
                 <span>Tasdiqlash</span>
               </button>
               <button
                 onclick="rejectVerification('\${req.id}')"
-                class="py-2 px-3 rounded-xl bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-600/30 font-bold text-xs transition flex items-center justify-center gap-1.5"
+                class="btn-pill-secondary py-2 text-xs text-ember hover:bg-rose-50 flex items-center justify-center gap-1.5"
               >
                 <span>❌</span>
                 <span>Rad etish</span>
@@ -921,7 +1024,7 @@ export function getAdminHtml(): string {
 
     async function loadUsers() {
       const tbody = document.getElementById('usersTableBody');
-      tbody.innerHTML = '<tr><td colspan="6" class="py-8 text-center text-slate-500">Yuklanmoqda...</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="py-8 text-center text-ash">Yuklanmoqda...</td></tr>';
 
       try {
         const query = new URLSearchParams({
@@ -941,10 +1044,10 @@ export function getAdminHtml(): string {
         if (data.users && data.users.length > 0) {
           tbody.innerHTML = data.users.map(u => renderUserTableRow(u)).join('');
         } else {
-          tbody.innerHTML = '<tr><td colspan="6" class="py-8 text-center text-slate-500">Foydalanuvchilar topilmadi</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="6" class="py-8 text-center text-ash">Foydalanuvchilar topilmadi</td></tr>';
         }
       } catch (err) {
-        tbody.innerHTML = '<tr><td colspan="6" class="py-8 text-center text-rose-400">Xatolik yuz berdi</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="py-8 text-center text-ember">Xatolik yuz berdi</td></tr>';
       }
     }
 
@@ -954,45 +1057,45 @@ export function getAdminHtml(): string {
       const date = new Date(u.createdAt).toLocaleDateString('uz-UZ');
 
       return \`
-        <tr class="hover:bg-slate-900/40 transition">
-          <td class="py-3 px-4">
+        <tr class="hover:bg-linen transition">
+          <td class="py-3 px-5">
             <div class="flex items-center gap-2.5">
-              <div class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-300">
+              <div class="w-8 h-8 rounded-full bg-mist border border-fog flex items-center justify-center text-xs font-semibold text-carbon">
                 👤
               </div>
               <div>
-                <p class="font-bold text-white">\${escapeHtml(name)}</p>
-                <p class="text-[11px] text-slate-400">\${escapeHtml(handle)}</p>
+                <p class="font-semibold text-carbon">\${escapeHtml(name)}</p>
+                <p class="text-[11px] text-ash">\${escapeHtml(handle)}</p>
               </div>
             </div>
           </td>
-          <td class="py-3 px-4 font-mono text-[11px] text-slate-300">\${u.telegramId}</td>
-          <td class="py-3 px-4">
+          <td class="py-3 px-5 font-mono text-[11px] text-graphite">\${u.telegramId}</td>
+          <td class="py-3 px-5">
             \${u.isVerified
-              ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">🛡 Tasdiqlangan</span>'
-              : '<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-800 text-slate-400">Oddiy</span>'
+              ? '<span class="tag-pill px-2.5 py-0.5 bg-mint-wash text-mint border border-mint/20 font-semibold">🛡 Tasdiqlangan</span>'
+              : '<span class="tag-pill px-2.5 py-0.5 bg-mist text-ash border border-fog font-medium">Oddiy</span>'
             }
           </td>
-          <td class="py-3 px-4">
+          <td class="py-3 px-5">
             \${u.isBlocked
-              ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">🚫 Bloklangan</span>'
-              : '<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400">✅ Faol</span>'
+              ? '<span class="tag-pill px-2.5 py-0.5 bg-rose-50 text-ember border border-rose-200 font-semibold">🚫 Bloklangan</span>'
+              : '<span class="tag-pill px-2.5 py-0.5 bg-mint-wash text-mint font-medium">Faol</span>'
             }
           </td>
-          <td class="py-3 px-4 text-slate-400 text-[11px]">\${date}</td>
-          <td class="py-3 px-4 text-right">
+          <td class="py-3 px-5 text-ash text-[11px]">\${date}</td>
+          <td class="py-3 px-5 text-right">
             <div class="flex items-center justify-end gap-1.5">
               <button
                 onclick="toggleUserVerify('\${u.telegramId}', \${!u.isVerified})"
                 title="\${u.isVerified ? 'Nishonni bekor qilish' : 'Nishon berish'}"
-                class="px-2.5 py-1 rounded-lg \${u.isVerified ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-brand-600 text-white hover:bg-brand-500'} text-[10px] font-bold transition"
+                class="btn-pill-secondary px-3 py-1 text-[11px] \${u.isVerified ? 'text-graphite' : 'text-lavender border-lavender/30'}"
               >
-                \${u.isVerified ? 'Nishonni olish' : '🛡 Nishon berish'}
+                \${u.isVerified ? 'Olish' : '🛡 Nishon'}
               </button>
               <button
                 onclick="toggleUserBlock('\${u.telegramId}', \${!u.isBlocked})"
                 title="\${u.isBlocked ? 'Blokdan chiqarish' : 'Bloklash'}"
-                class="px-2.5 py-1 rounded-lg \${u.isBlocked ? 'bg-emerald-600 text-white' : 'bg-rose-600/20 text-rose-300 hover:bg-rose-600 hover:text-white'} text-[10px] font-bold transition"
+                class="btn-pill-secondary px-3 py-1 text-[11px] \${u.isBlocked ? 'text-mint' : 'text-ember'}"
               >
                 \${u.isBlocked ? 'Chiqarish' : 'Bloklash'}
               </button>
@@ -1039,7 +1142,7 @@ export function getAdminHtml(): string {
     // =============================================================
     async function loadConversations() {
       const container = document.getElementById('conversationsListContainer');
-      container.innerHTML = '<p class="text-xs text-slate-500 p-4 text-center">Yuklanmoqda...</p>';
+      container.innerHTML = '<p class="text-xs text-ash p-4 text-center">Yuklanmoqda...</p>';
 
       try {
         const res = await apiFetch('/api/admin/conversations?limit=30');
@@ -1050,10 +1153,10 @@ export function getAdminHtml(): string {
         if (data.conversations && data.conversations.length > 0) {
           container.innerHTML = data.conversations.map(c => renderConversationItem(c)).join('');
         } else {
-          container.innerHTML = '<p class="text-xs text-slate-500 p-4 text-center">Suhbatlar mavjud emas</p>';
+          container.innerHTML = '<p class="text-xs text-ash p-4 text-center">Suhbatlar mavjud emas</p>';
         }
       } catch (err) {
-        container.innerHTML = '<p class="text-xs text-rose-400 p-4 text-center">Yuklashda xatolik</p>';
+        container.innerHTML = '<p class="text-xs text-ember p-4 text-center">Yuklashda xatolik</p>';
       }
     }
 
@@ -1062,18 +1165,18 @@ export function getAdminHtml(): string {
       const lastText = c.lastMessage?.content || '(Xabarlar yo‘q)';
       const isSelected = c.id === activeConversationId;
       const statusBadge = c.status === 'WAITING_HUMAN'
-        ? '<span class="px-1.5 py-0.2 rounded-full text-[9px] bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">Operator kutmoqda</span>'
+        ? '<span class="tag-pill px-2 py-0.5 bg-amber/15 text-amber text-[10px] font-semibold">Operator</span>'
         : c.status === 'CLOSED'
-          ? '<span class="px-1.5 py-0.2 rounded-full text-[9px] bg-slate-800 text-slate-400 font-semibold">Yopilgan</span>'
-          : '<span class="px-1.5 py-0.2 rounded-full text-[9px] bg-brand-500/20 text-brand-300 font-semibold">AI faol</span>';
+          ? '<span class="tag-pill px-2 py-0.5 bg-mist text-ash text-[10px]">Yopilgan</span>'
+          : '<span class="tag-pill px-2 py-0.5 bg-lavender/15 text-lavender text-[10px]">AI</span>';
 
       return \`
-        <div onclick="selectConversation('\${c.id}', '\${escapeHtml(name)}', '\${c.user?.telegramId || ''}', '\${c.status}')" class="p-3 cursor-pointer transition \${isSelected ? 'bg-brand-600/15 border-l-4 border-brand-500' : 'hover:bg-slate-900/50'}">
+        <div onclick="selectConversation('\${c.id}', '\${escapeHtml(name)}', '\${c.user?.telegramId || ''}', '\${c.status}')" class="p-3.5 cursor-pointer transition \${isSelected ? 'bg-mist border-l-4 border-l-lavender' : 'hover:bg-linen'}">
           <div class="flex items-center justify-between gap-2 mb-1">
-            <h5 class="text-xs font-bold text-white truncate">\${escapeHtml(name)}</h5>
+            <h5 class="text-xs font-semibold text-carbon truncate">\${escapeHtml(name)}</h5>
             \${statusBadge}
           </div>
-          <p class="text-[11px] text-slate-400 truncate">\${escapeHtml(lastText)}</p>
+          <p class="text-[11px] text-graphite truncate">\${escapeHtml(lastText)}</p>
         </div>
       \`;
     }
@@ -1090,14 +1193,13 @@ export function getAdminHtml(): string {
       btn.disabled = false;
       input.focus();
 
-      // Highlight in list
       loadConversations();
       loadChatMessages(id);
     }
 
     async function loadChatMessages(id) {
       const stream = document.getElementById('chatMessagesStream');
-      stream.innerHTML = '<div class="h-full flex items-center justify-center text-xs text-slate-500">Xabarlar yuklanmoqda...</div>';
+      stream.innerHTML = '<div class="h-full flex items-center justify-center text-xs text-ash">Xabarlar yuklanmoqda...</div>';
 
       try {
         const res = await apiFetch('/api/admin/conversations/' + id + '/messages');
@@ -1109,20 +1211,20 @@ export function getAdminHtml(): string {
             const time = new Date(m.createdAt).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' });
             return \`
               <div class="flex flex-col \${isUser ? 'items-start' : 'items-end'}">
-                <div class="max-w-[75%] p-3 rounded-2xl text-xs leading-relaxed \${isUser ? 'bg-slate-800 text-slate-100 rounded-bl-none' : 'bg-brand-600 text-white rounded-br-none shadow-md shadow-brand-900/20'}">
-                  <div class="text-[10px] font-bold opacity-75 mb-1">\${isUser ? '👤 Mijoz' : (m.role === 'ADMIN' ? '👨‍💻 Operator' : '🤖 AI Assistant')}</div>
+                <div class="max-w-[75%] p-3.5 rounded-2xl text-xs leading-relaxed \${isUser ? 'bg-white border border-fog text-carbon rounded-bl-none shadow-subtle' : 'bg-lavender text-white rounded-br-none shadow-subtle'}">
+                  <div class="text-[10px] font-semibold opacity-75 mb-1">\${isUser ? '👤 Mijoz' : (m.role === 'ADMIN' ? '👨‍💻 Operator' : '🤖 AI Assistant')}</div>
                   <div class="whitespace-pre-wrap">\${escapeHtml(m.content)}</div>
-                  <div class="text-[9px] opacity-60 text-right mt-1">\${time}</div>
+                  <div class="text-[9px] opacity-65 text-right mt-1">\${time}</div>
                 </div>
               </div>
             \`;
           }).join('');
           stream.scrollTop = stream.scrollHeight;
         } else {
-          stream.innerHTML = '<div class="h-full flex items-center justify-center text-xs text-slate-500">Xabarlar mavjud emas</div>';
+          stream.innerHTML = '<div class="h-full flex items-center justify-center text-xs text-ash">Xabarlar mavjud emas</div>';
         }
       } catch (err) {
-        stream.innerHTML = '<div class="h-full flex items-center justify-center text-xs text-rose-400">Xabarlarni yuklab bo‘lmadi</div>';
+        stream.innerHTML = '<div class="h-full flex items-center justify-center text-xs text-ember">Xabarlarni yuklab bo‘lmadi</div>';
       }
     }
 
@@ -1179,20 +1281,17 @@ export function getAdminHtml(): string {
     }
 
     // =============================================================
-    // TOAST NOTIFICATIONS
+    // TOAST NOTIFICATIONS (DESIGN.md White Card Minimalist Style)
     // =============================================================
     function showToast(message, type = 'info') {
       const container = document.getElementById('toastContainer');
       const toast = document.createElement('div');
 
-      const bg = type === 'success'
-        ? 'bg-emerald-950/90 border-emerald-700/80 text-emerald-200'
-        : type === 'error'
-          ? 'bg-rose-950/90 border-rose-700/80 text-rose-200'
-          : 'bg-slate-900/90 border-slate-700/80 text-slate-200';
+      const icon = type === 'success' ? '✅' : (type === 'error' ? '⚠️' : 'ℹ️');
+      const borderAccent = type === 'success' ? 'border-l-mint' : (type === 'error' ? 'border-l-ember' : 'border-l-lavender');
 
-      toast.className = 'glass pointer-events-auto p-3.5 rounded-xl border shadow-xl text-xs flex items-center gap-2 transform transition-all duration-300 translate-y-2 opacity-0 ' + bg;
-      toast.innerHTML = '<span>' + (type === 'success' ? '✅' : (type === 'error' ? '⚠️' : 'ℹ️')) + '</span><span class="flex-1">' + escapeHtml(message) + '</span>';
+      toast.className = 'card-blueprint pointer-events-auto p-3.5 border-l-4 shadow-subtle-3 text-xs flex items-center gap-2.5 transform transition-all duration-300 translate-y-2 opacity-0 bg-white ' + borderAccent;
+      toast.innerHTML = '<span class="text-sm">' + icon + '</span><span class="flex-1 font-medium text-carbon">' + escapeHtml(message) + '</span>';
 
       container.appendChild(toast);
       requestAnimationFrame(() => {
