@@ -2,6 +2,7 @@ import Fastify, { FastifyInstance } from 'fastify';
 import config from '../config/env';
 import logger from '../utils/logger';
 import healthRoutes from './health';
+import adminRoutes from './admin/admin.routes';
 
 export function createServer(): FastifyInstance {
   const server = Fastify({
@@ -11,6 +12,9 @@ export function createServer(): FastifyInstance {
 
   // Register health check endpoints
   server.register(healthRoutes);
+
+  // Register Admin Web Panel routes
+  server.register(adminRoutes);
 
   return server;
 }

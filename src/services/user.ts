@@ -48,6 +48,18 @@ export class UserService {
   }
 
   /**
+   * Sets verification status for a user
+   */
+  public async setVerified(telegramId: bigint | string | number, isVerified: boolean): Promise<User> {
+    const user = await this.userRepo.setVerifiedStatus(telegramId, isVerified);
+    logger.info(
+      { telegramId: telegramId.toString(), isVerified },
+      `User verification badge ${isVerified ? 'granted' : 'revoked'}`,
+    );
+    return user;
+  }
+
+  /**
    * Returns stats about users
    */
   public async getUserCount(): Promise<number> {
@@ -59,6 +71,68 @@ export class UserService {
    */
   public async getRecentUsers(limit = 10): Promise<User[]> {
     return this.userRepo.getRecentUsers(limit);
+  }
+
+  /**
+   * Paged users list with filters for Admin Web Panel
+   */
+  public async getUsersPaged(options: {
+    search?: string;
+    page?: number;
+    limit?: number;
+    isVerified?: boolean;
+    isBlocked?: boolean;
+  }): Promise<{ users: any[]; total: number; page: number; totalPages: number }> {
+    const page = Math.max(1, options.page || 1);
+    const limit = Math.min(100, Math.max(1, options.limit || 20));
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+    if (typeof options.isVerified === 'boolean') {
+      where.isVerified = options.isVerified;
+    }
+    if (typeof options.isBlocked === 'boolean') {
+      where.isBlocked = options.isBlocked;
+    }
+    if (options.search && options.search.trim()) {
+      const term = options.search.trim();
+      const isNum = /^\d+$/.test(term);
+      where.OR = [
+        { username: { contains: term, mode: 'insensitive' } },
+        { firstName: { contains: term, mode: 'insensitive' } },
+        { lastName: { contains: term, mode: 'insensitive' } },
+        ...(isNum ? [{ telegramId: BigInt(term) }] : []),
+      ];
+    }
+
+    const prisma = (await import('../database/prisma')).default;
+    const [total, users] = await Promise.all([
+      prisma.user.count({ where }),
+      prisma.user.findMany({
+        where,
+        include: {
+          _count: {
+            select: {
+              conversations: true,
+              verificationRequests: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+    ]);
+
+    return {
+      users: users.map((u) => ({
+        ...u,
+        telegramId: u.telegramId.toString(),
+      })),
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 }
 

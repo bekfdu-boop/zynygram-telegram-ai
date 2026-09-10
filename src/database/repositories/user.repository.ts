@@ -63,6 +63,17 @@ export class UserRepository {
   }
 
   /**
+   * Sets verification badge status for a user
+   */
+  public async setVerifiedStatus(telegramId: bigint | string | number, isVerified: boolean): Promise<User> {
+    const bigIntId = typeof telegramId === 'bigint' ? telegramId : BigInt(telegramId);
+    return prisma.user.update({
+      where: { telegramId: bigIntId },
+      data: { isVerified },
+    });
+  }
+
+  /**
    * Counts total registered users
    */
   public async countUsers(): Promise<number> {

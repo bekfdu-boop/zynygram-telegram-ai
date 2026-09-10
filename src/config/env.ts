@@ -54,6 +54,10 @@ const envSchema = z.object({
     .default('60000')
     .transform((val) => parseInt(val, 10))
     .pipe(z.number().positive()),
+  ADMIN_PANEL_PASSWORD: z
+    .string()
+    .optional()
+    .default('zynygram2026'),
 });
 
 const parseEnv = () => {
@@ -82,6 +86,7 @@ export const config = {
   adminIds: parsed.ADMIN_TELEGRAM_IDS,
   supportGroupId: parsed.SUPPORT_GROUP_ID,
   maxMessageLength: parsed.MAX_MESSAGE_LENGTH,
+  adminPassword: parsed.ADMIN_PANEL_PASSWORD,
   nodeEnv: parsed.NODE_ENV,
   port: parsed.PORT,
   rateLimit: {

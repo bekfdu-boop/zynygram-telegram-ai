@@ -405,6 +405,99 @@ ${cleanProof || (photoMatch ? '📸 <i>(Skrinshot / Rasm ilova qilingan)</i>' : 
       return [];
     }
   }
+
+  /**
+   * Paged verification requests with filtering for Admin Web Panel
+   */
+  public async getRequestsPaged(options: {
+    status?: VerificationStatus;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{ requests: any[]; total: number; page: number; totalPages: number }> {
+    const page = Math.max(1, options.page || 1);
+    const limit = Math.min(100, Math.max(1, options.limit || 20));
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+    if (options.status) {
+      where.status = options.status;
+    }
+    if (options.search && options.search.trim()) {
+      const term = options.search.trim();
+      const isNum = /^\d+$/.test(term);
+      where.OR = [
+        { proofText: { contains: term, mode: 'insensitive' } },
+        { user: { username: { contains: term, mode: 'insensitive' } } },
+        { user: { firstName: { contains: term, mode: 'insensitive' } } },
+        ...(isNum ? [{ user: { telegramId: BigInt(term) } }] : []),
+      ];
+    }
+
+    try {
+      const [total, rawRequests] = await Promise.all([
+        prisma.verificationRequest.count({ where }),
+        prisma.verificationRequest.findMany({
+          where,
+          include: {
+            user: {
+              select: {
+                id: true,
+                telegramId: true,
+                username: true,
+                firstName: true,
+                lastName: true,
+                isVerified: true,
+                isBlocked: true,
+              },
+            },
+          },
+          orderBy: { createdAt: 'desc' },
+          skip,
+          take: limit,
+        }),
+      ]);
+
+      const requests = rawRequests.map((r) => {
+        const photoMatch = r.proofText?.match(/\[Photo:\s*([^\]]+)\]/);
+        const cleanProof = r.proofText
+          ? r.proofText
+              .replace(/\[Photo:\s*[^\]]+\]/g, '')
+              .replace(/\[BusinessChat:\s*[^\]]+\]/g, '')
+              .trim()
+          : '';
+
+        const customNikMatch = cleanProof.match(/(?:nik|username|profil|login|nomi)[\s:]*@?([a-zA-Z0-9_.]{3,30})/i);
+        const atUsernameMatch = cleanProof.match(/@([a-zA-Z0-9_.]{3,30})/);
+        const detectedUsername = customNikMatch ? customNikMatch[1] : (atUsernameMatch ? atUsernameMatch[1] : null);
+
+        return {
+          id: r.id,
+          status: r.status,
+          proofText: cleanProof,
+          rawProof: r.proofText,
+          photoFileId: photoMatch ? photoMatch[1] : null,
+          zynygramUsername: detectedUsername,
+          createdAt: r.createdAt,
+          updatedAt: r.updatedAt,
+          user: {
+            ...r.user,
+            telegramId: r.user.telegramId.toString(),
+          },
+        };
+      });
+
+      return {
+        requests,
+        total,
+        page,
+        totalPages: Math.ceil(total / limit),
+      };
+    } catch (err) {
+      logger.error({ error: err }, 'Failed to fetch paged verification requests');
+      return { requests: [], total: 0, page, totalPages: 0 };
+    }
+  }
 }
 
 export const verificationService = new VerificationService();

@@ -104,6 +104,103 @@ export class ConversationService {
   public async getRecentInquiries(limit = 10) {
     return this.convRepo.getRecentInquiries(limit);
   }
+
+  /**
+   * Paged conversations with message preview for Admin Web Panel
+   */
+  public async getConversationsPaged(options: {
+    status?: ConversationStatus;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{ conversations: any[]; total: number; page: number; totalPages: number }> {
+    const page = Math.max(1, options.page || 1);
+    const limit = Math.min(100, Math.max(1, options.limit || 20));
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+    if (options.status) {
+      where.status = options.status;
+    }
+    if (options.search && options.search.trim()) {
+      const term = options.search.trim();
+      const isNum = /^\d+$/.test(term);
+      where.OR = [
+        { user: { username: { contains: term, mode: 'insensitive' } } },
+        { user: { firstName: { contains: term, mode: 'insensitive' } } },
+        { user: { lastName: { contains: term, mode: 'insensitive' } } },
+        ...(isNum ? [{ user: { telegramId: BigInt(term) } }] : []),
+      ];
+    }
+
+    const prisma = (await import('../database/prisma')).default;
+    const [total, conversations] = await Promise.all([
+      prisma.conversation.count({ where }),
+      prisma.conversation.findMany({
+        where,
+        include: {
+          user: {
+            select: {
+              id: true,
+              telegramId: true,
+              username: true,
+              firstName: true,
+              lastName: true,
+              isVerified: true,
+              isBlocked: true,
+            },
+          },
+          messages: {
+            orderBy: { createdAt: 'desc' },
+            take: 1,
+          },
+          _count: {
+            select: { messages: true },
+          },
+        },
+        orderBy: { updatedAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+    ]);
+
+    return {
+      conversations: conversations.map((c) => ({
+        ...c,
+        user: {
+          ...c.user,
+          telegramId: c.user.telegramId.toString(),
+        },
+        lastMessage: c.messages[0]
+          ? {
+              ...c.messages[0],
+              telegramMessageId: c.messages[0].telegramMessageId
+                ? c.messages[0].telegramMessageId.toString()
+                : null,
+            }
+          : null,
+      })),
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  /**
+   * Retrieves full conversation message history for Admin Web Panel
+   */
+  public async getConversationMessages(conversationId: string): Promise<any[]> {
+    const prisma = (await import('../database/prisma')).default;
+    const messages = await prisma.message.findMany({
+      where: { conversationId },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    return messages.map((m) => ({
+      ...m,
+      telegramMessageId: m.telegramMessageId ? m.telegramMessageId.toString() : null,
+    }));
+  }
 }
 
 export const conversationService = new ConversationService();
