@@ -85,6 +85,23 @@ export class ConversationRepository {
       },
     });
   }
+
+  /**
+   * Retrieves recent inquiries with user and their latest message
+   */
+  public async getRecentInquiries(limit = 10) {
+    return prisma.conversation.findMany({
+      orderBy: { updatedAt: 'desc' },
+      take: limit,
+      include: {
+        user: true,
+        messages: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+        },
+      },
+    });
+  }
 }
 
 export const conversationRepository = new ConversationRepository();

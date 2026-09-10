@@ -230,6 +230,78 @@ ${request.proofText || '(Isbot matni yo‘q)'}`;
       }
     }
   }
+  /**
+   * Retrieves summary statistics for verification requests
+   */
+  public async getVerificationStats(): Promise<{
+    total: number;
+    pending: number;
+    approved: number;
+    rejected: number;
+  }> {
+    try {
+      const [total, pending, approved, rejected] = await Promise.all([
+        prisma.verificationRequest.count(),
+        prisma.verificationRequest.count({ where: { status: VerificationStatus.PENDING } }),
+        prisma.verificationRequest.count({ where: { status: VerificationStatus.APPROVED } }),
+        prisma.verificationRequest.count({ where: { status: VerificationStatus.REJECTED } }),
+      ]);
+
+      return { total, pending, approved, rejected };
+    } catch (error) {
+      logger.error({ error }, 'Failed to fetch verification statistics');
+      return { total: 0, pending: 0, approved: 0, rejected: 0 };
+    }
+  }
+
+  /**
+   * Retrieves pending verification requests with user details
+   */
+  public async getPendingRequests(limit = 10): Promise<
+    (VerificationRequest & {
+      user: { telegramId: bigint; username: string | null; firstName: string | null; lastName: string | null };
+    })[]
+  > {
+    try {
+      return await prisma.verificationRequest.findMany({
+        where: { status: VerificationStatus.PENDING },
+        include: {
+          user: {
+            select: { telegramId: true, username: true, firstName: true, lastName: true },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+      });
+    } catch (error) {
+      logger.error({ error }, 'Failed to fetch pending verification requests');
+      return [];
+    }
+  }
+
+  /**
+   * Retrieves recent verification requests with status
+   */
+  public async getRecentRequests(limit = 10): Promise<
+    (VerificationRequest & {
+      user: { telegramId: bigint; username: string | null; firstName: string | null; lastName: string | null };
+    })[]
+  > {
+    try {
+      return await prisma.verificationRequest.findMany({
+        include: {
+          user: {
+            select: { telegramId: true, username: true, firstName: true, lastName: true },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+      });
+    } catch (error) {
+      logger.error({ error }, 'Failed to fetch recent verification requests');
+      return [];
+    }
+  }
 }
 
 export const verificationService = new VerificationService();

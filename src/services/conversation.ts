@@ -97,6 +97,13 @@ export class ConversationService {
 
     return { total, open, aiHandled, waitingHuman, closed };
   }
+
+  /**
+   * Retrieves recent user inquiries and conversations
+   */
+  public async getRecentInquiries(limit = 10) {
+    return this.convRepo.getRecentInquiries(limit);
+  }
 }
 
 export const conversationService = new ConversationService();

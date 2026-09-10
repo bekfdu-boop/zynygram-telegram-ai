@@ -12,6 +12,8 @@ vi.mock('../src/database/prisma', () => {
         create: vi.fn(),
         findUnique: vi.fn(),
         update: vi.fn(),
+        count: vi.fn(),
+        findMany: vi.fn(),
       },
       user: {
         update: vi.fn(),
@@ -150,4 +152,58 @@ describe('VerificationService', () => {
       VERIFICATION_REJECTED_USER_MESSAGE,
     );
   });
+
+  it('should return verification statistics correctly', async () => {
+    vi.mocked(prisma.verificationRequest.count)
+      .mockResolvedValueOnce(10) // total
+      .mockResolvedValueOnce(3) // pending
+      .mockResolvedValueOnce(5) // approved
+      .mockResolvedValueOnce(2); // rejected
+
+    const stats = await verificationService.getVerificationStats();
+
+    expect(stats).toEqual({
+      total: 10,
+      pending: 3,
+      approved: 5,
+      rejected: 2,
+    });
+  });
+
+  it('should return pending requests with user information', async () => {
+    const mockPending = [
+      {
+        id: 'req-pending-1',
+        userId: mockUser.id,
+        status: VerificationStatus.PENDING,
+        proofText: 'https://t.me/zynygram/21 kanalimda ulashdim',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        user: {
+          telegramId: mockUser.telegramId,
+          username: mockUser.username,
+          firstName: mockUser.firstName,
+          lastName: mockUser.lastName,
+        },
+      },
+    ];
+
+    vi.mocked(prisma.verificationRequest.findMany).mockResolvedValue(mockPending as any);
+
+    const pending = await verificationService.getPendingRequests(5);
+
+    expect(pending.length).toBe(1);
+    expect(pending[0].proofText).toContain('kanalimda ulashdim');
+    expect(prisma.verificationRequest.findMany).toHaveBeenCalledWith({
+      where: { status: VerificationStatus.PENDING },
+      include: {
+        user: {
+          select: { telegramId: true, username: true, firstName: true, lastName: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+    });
+  });
 });
+
