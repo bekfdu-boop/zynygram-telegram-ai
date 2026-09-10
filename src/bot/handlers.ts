@@ -16,7 +16,7 @@ import {
 import { ConversationStatus } from '@prisma/client';
 import config from '../config/env';
 import logger from '../utils/logger';
-import { escapeTelegramHtml } from '../utils/text';
+import { escapeTelegramHtml, markdownToTelegramHtml } from '../utils/text';
 
 export const VERIFY_INFO_MESSAGE = `🛡 <b>Zynygram Tasdiqlash Nishonini Olish Shartlari:</b>
 
@@ -891,7 +891,15 @@ ${cleanProof || (photoMatch ? '📸 <i>(Skrinshot ilova qilingan)</i>' : '<i>(Is
     });
 
     if (result.replyText) {
-      await ctx.reply(result.replyText, isAdmin ? getAdminMainMenu() : getUserMainMenu());
+      const htmlReply = markdownToTelegramHtml(result.replyText);
+      try {
+        await ctx.reply(htmlReply, {
+          parse_mode: 'HTML',
+          ...(isAdmin ? getAdminMainMenu() : getUserMainMenu()),
+        });
+      } catch {
+        await ctx.reply(result.replyText, isAdmin ? getAdminMainMenu() : getUserMainMenu());
+      }
     }
   });
 

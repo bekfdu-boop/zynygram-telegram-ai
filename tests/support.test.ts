@@ -7,6 +7,7 @@ import { ModerationService } from '../src/services/moderation';
 import { IAIClient } from '../src/ai/client';
 import { ConversationStatus, MessageRole, User, Conversation } from '@prisma/client';
 import { isAuthorizedAdmin } from '../src/bot/middleware';
+import { markdownToTelegramHtml } from '../src/utils/text';
 import config from '../src/config/env';
 
 describe('Support System & Flow', () => {
@@ -191,6 +192,21 @@ describe('Support System & Flow', () => {
       };
 
       expect(isAuthorizedAdmin(mockCtx as never)).toBe(false);
+    });
+  });
+
+  describe('Telegram Markdown to HTML Formatter', () => {
+    it('should format bold asterisks into bold html tags without leaving raw asterisks', () => {
+      const input = 'Rahmat, **zyny2323** foydalanuvchi nomini qabul qildik! ✨';
+      const result = markdownToTelegramHtml(input);
+      expect(result).toBe('Rahmat, <b>zyny2323</b> foydalanuvchi nomini qabul qildik! ✨');
+      expect(result).not.toContain('**');
+    });
+
+    it('should format links, code, and italic correctly', () => {
+      const input = 'Qarang: *muhim* va [Zynygram](https://t.me/zynygram) hamda `kod`.';
+      const result = markdownToTelegramHtml(input);
+      expect(result).toBe('Qarang: <i>muhim</i> va <a href="https://t.me/zynygram">Zynygram</a> hamda <code>kod</code>.');
     });
   });
 });

@@ -3,7 +3,7 @@ import supportService, { SupportService } from '../services/support';
 import verificationService, { VerificationService } from '../services/verification';
 import config from '../config/env';
 import logger from '../utils/logger';
-import { escapeTelegramHtml } from '../utils/text';
+import { escapeTelegramHtml, markdownToTelegramHtml } from '../utils/text';
 import diagnostics from '../utils/diagnostics';
 
 /**
@@ -292,10 +292,12 @@ export function registerChatAutomationHandlers(
             'Sending automated business message reply via Telegram Bot API',
           );
           // Send reply within the business chat context using official business_connection_id
+          const htmlReply = markdownToTelegramHtml(result.replyText);
           try {
             await ctx.telegram.callApi('sendMessage', {
               chat_id: chatId,
-              text: result.replyText,
+              text: htmlReply,
+              parse_mode: 'HTML',
               business_connection_id: connectionId,
             } as never);
             diagnostics.record('business_reply_sent', {
@@ -305,15 +307,29 @@ export function registerChatAutomationHandlers(
             });
             logger.info({ chatId, connectionId }, 'Automated reply sent successfully');
           } catch (apiErr) {
-            diagnostics.record('business_reply_error', {
-              chatId,
-              connectionId,
-              error: apiErr instanceof Error ? apiErr.message : String(apiErr),
-            });
-            logger.error(
-              { error: apiErr, connectionId, chatId },
-              'Telegram API error while sending automated business reply',
-            );
+            logger.warn({ error: apiErr, chatId, connectionId }, 'HTML reply failed, trying plain text fallback');
+            try {
+              await ctx.telegram.callApi('sendMessage', {
+                chat_id: chatId,
+                text: result.replyText,
+                business_connection_id: connectionId,
+              } as never);
+              diagnostics.record('business_reply_sent_plaintext', {
+                chatId,
+                connectionId,
+                textPreview: result.replyText.substring(0, 50),
+              });
+            } catch (fallbackErr) {
+              diagnostics.record('business_reply_error', {
+                chatId,
+                connectionId,
+                error: fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr),
+              });
+              logger.error(
+                { error: fallbackErr, connectionId, chatId },
+                'Telegram API error while sending automated business reply',
+              );
+            }
           }
         }
       } catch (error) {

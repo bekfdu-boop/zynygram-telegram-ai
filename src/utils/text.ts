@@ -45,6 +45,58 @@ export function escapeTelegramHtml(text: string): string {
 }
 
 /**
+ * Converts standard Markdown formatting (bold, italic, links, inline code) into valid Telegram HTML.
+ * Safely escapes non-tag characters to ensure Telegram never errors on parse_mode: 'HTML'.
+ */
+export function markdownToTelegramHtml(text: string): string {
+  if (!text) return '';
+
+  // 1. Protect code blocks
+  const codeBlocks: string[] = [];
+  let processed = text.replace(/```(\w*)\n?([\s\S]*?)```/g, (_match, _lang, code) => {
+    const idx = codeBlocks.length;
+    codeBlocks.push(`<pre>${escapeTelegramHtml(code.trim())}</pre>`);
+    return `___CODE_BLOCK_${idx}___`;
+  });
+
+  // 2. Protect inline code
+  const inlineCodes: string[] = [];
+  processed = processed.replace(/`([^`]+)`/g, (_match, code) => {
+    const idx = inlineCodes.length;
+    inlineCodes.push(`<code>${escapeTelegramHtml(code)}</code>`);
+    return `___INLINE_CODE_${idx}___`;
+  });
+
+  // 3. Escape HTML entities
+  processed = escapeTelegramHtml(processed);
+
+  // 4. Convert bold (**text** or __text__)
+  processed = processed.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+  processed = processed.replace(/__([^_]+)__/g, '<b>$1</b>');
+
+  // 5. Convert italic (*text*)
+  processed = processed.replace(/(^|[^\w*])\*([^*]+)\*(?=[^\w*]|$)/g, '$1<i>$2</i>');
+
+  // 6. Convert Markdown links: [text](url) -> <a href="url">text</a>
+  processed = processed.replace(
+    /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+    '<a href="$2">$1</a>',
+  );
+
+  // 7. Restore inline code
+  processed = processed.replace(/___INLINE_CODE_(\d+)___/g, (_match, idx) => {
+    return inlineCodes[parseInt(idx, 10)] || '';
+  });
+
+  // 8. Restore code blocks
+  processed = processed.replace(/___CODE_BLOCK_(\d+)___/g, (_match, idx) => {
+    return codeBlocks[parseInt(idx, 10)] || '';
+  });
+
+  return processed;
+}
+
+/**
  * Checks for common leaked secrets/credentials patterns (API keys, JWT, passwords, etc.)
  */
 export function containsSensitivePatterns(text: string): boolean {
