@@ -25,7 +25,18 @@ export async function startServer(server: FastifyInstance): Promise<void> {
       port: config.port,
       host: '0.0.0.0',
     });
-    logger.info({ port: config.port, address }, 'Fastify HTTP server started');
+    const railwayDomain = process.env.RAILWAY_PUBLIC_DOMAIN || process.env.RAILWAY_STATIC_URL;
+    if (railwayDomain) {
+      logger.info(
+        { adminUrl: `https://${railwayDomain}/admin`, port: config.port, address },
+        '🚀 Zynygram Admin Web Panel is live on Railway',
+      );
+    } else {
+      logger.info(
+        { adminUrl: `http://localhost:${config.port}/admin`, port: config.port, address },
+        'Fastify HTTP server started',
+      );
+    }
   } catch (error) {
     logger.error({ error }, 'Failed to start Fastify HTTP server');
     throw error;
