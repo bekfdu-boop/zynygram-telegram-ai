@@ -84,12 +84,17 @@ export function registerChatAutomationHandlers(
         });
 
         if (result.replyText) {
+          logger.info(
+            { chatId, connectionId, replyPreview: result.replyText.substring(0, 50) },
+            'Sending automated business message reply via Telegram Bot API',
+          );
           // Send reply within the business chat context using official business_connection_id
           await ctx.telegram.callApi('sendMessage', {
             chat_id: chatId,
             text: result.replyText,
             business_connection_id: connectionId,
           } as never);
+          logger.info({ chatId, connectionId }, 'Automated reply sent successfully');
         }
       } catch (error) {
         logger.error(

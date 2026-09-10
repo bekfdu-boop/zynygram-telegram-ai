@@ -46,9 +46,18 @@ export async function startBot(): Promise<void> {
       'Telegram bot authenticated successfully',
     );
 
-    // Launch polling in background
+    // Launch polling in background with explicit business updates
     bot.launch({
       dropPendingUpdates: true,
+      allowedUpdates: [
+        'message',
+        'edited_message',
+        'channel_post',
+        'edited_channel_post',
+        'business_connection',
+        'business_message',
+        'edited_business_message',
+      ] as never,
     }).catch((err: unknown) => {
       logger.error({ error: err }, 'Telegram bot polling error');
     });
