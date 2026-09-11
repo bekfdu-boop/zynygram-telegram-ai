@@ -107,17 +107,18 @@ export function registerChatAutomationHandlers(
       // If the sender matches the business connection owner, OR in 1-on-1 chats if chatId !== fromUser.id,
       // it is an outgoing message from the business owner.
       const connInfo = connectionId ? diagnostics.businessConnections.get(connectionId) : undefined;
+      const isFromConfiguredAdmin = config.adminIds.includes(fromUser.id.toString());
       const isOutgoingFromOwner = connInfo?.userId
         ? connInfo.userId.toString() === fromUser.id.toString()
         : chatId !== fromUser.id;
 
-      if (isOutgoingFromOwner) {
+      if (isOutgoingFromOwner || isFromConfiguredAdmin) {
         logger.debug(
           { fromUserId: fromUser.id, chatId, connectionId },
-          'Ignoring outgoing business message sent by business owner',
+          'Ignoring outgoing business message sent by business owner/admin',
         );
         diagnostics.record('business_message_ignored', {
-          reason: 'outgoing_from_business_owner',
+          reason: 'outgoing_from_business_owner_or_admin',
           fromUserId: fromUser.id,
           chatId,
           connectionId,

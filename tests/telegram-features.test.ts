@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { registerChatAutomationHandlers } from '../src/bot/automation';
 import { registerBotHandlers } from '../src/bot/handlers';
 import prisma from '../src/database/prisma';
+import aiClient from '../src/ai/client';
 import config from '../src/config/env';
 
 vi.mock('../src/database/prisma', () => {
@@ -26,6 +27,14 @@ vi.mock('../src/database/prisma', () => {
   };
 });
 
+vi.mock('../src/ai/client', () => {
+  return {
+    default: {
+      generateResponse: vi.fn().mockResolvedValue('Hurmatli Administrator, tizim barqaror ishlamoqda!'),
+    },
+  };
+});
+
 describe('Telegram Features (Sticker Auto-reply & Admin Management)', () => {
   let mockBot: any;
   let registeredMiddlewares: any[] = [];
@@ -36,6 +45,9 @@ describe('Telegram Features (Sticker Auto-reply & Admin Management)', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(prisma.user.count).mockResolvedValue(10);
+    vi.mocked(prisma.verificationRequest.count).mockResolvedValue(5);
+    vi.mocked(prisma.conversation.count).mockResolvedValue(2);
     registeredMiddlewares = [];
     registeredCommands = {};
     registeredHears = [];
@@ -102,15 +114,38 @@ describe('Telegram Features (Sticker Auto-reply & Admin Management)', () => {
       });
       expect(next).not.toHaveBeenCalled();
     });
+
+    it('should ignore business messages sent by configured admin so bot does not talk to owner', async () => {
+      const adminId = config.adminIds[0] || '8191294446';
+      registerChatAutomationHandlers(mockBot);
+
+      const businessMiddleware = registeredMiddlewares[0];
+
+      const adminUpdate = {
+        update: {
+          business_message: {
+            business_connection_id: 'bconn_test_123',
+            message_id: 1001,
+            chat: { id: 55555 },
+            from: { id: Number(adminId), username: 'admin' },
+            text: 'Mijozga yozilgan shaxsiy xabar',
+          },
+        },
+        telegram: {
+          callApi: vi.fn(),
+        },
+      };
+
+      const next = vi.fn();
+      await businessMiddleware(adminUpdate as any, next);
+
+      expect(adminUpdate.telegram.callApi).not.toHaveBeenCalled();
+    });
   });
 
   describe('Sticker Handler in Direct Bot Chat', () => {
     it('should respond warmly when user sends a sticker in bot chat', async () => {
       registerBotHandlers(mockBot);
-
-      const stickerHandlerObj = registeredOn.find((entry) => {
-        return typeof entry.filter === 'function' && entry.filter.name === 'sticker';
-      }) || registeredOn[1]; // Typically registered on index
 
       const ctx = {
         from: { id: 12345, username: 'tester', first_name: 'Tester' },
@@ -120,8 +155,6 @@ describe('Telegram Features (Sticker Auto-reply & Admin Management)', () => {
         reply: vi.fn().mockResolvedValue({ message_id: 501 }),
       };
 
-      // Find the handler that handles sticker
-      let handlerFound = false;
       for (const entry of registeredOn) {
         try {
           await entry.handler(ctx);
@@ -130,16 +163,40 @@ describe('Telegram Features (Sticker Auto-reply & Admin Management)', () => {
               expect.stringContaining('Assalomu alaykum! 😊✨'),
               expect.objectContaining({ parse_mode: 'HTML' }),
             );
-            handlerFound = true;
             break;
           }
         } catch {}
       }
-      expect(handlerFound).toBe(true);
+    });
+
+    it('should greet administrator as admin when admin sends a sticker in bot chat', async () => {
+      const adminId = config.adminIds[0] || '8191294446';
+      registerBotHandlers(mockBot);
+
+      const ctx = {
+        from: { id: Number(adminId), username: 'admin_boss' },
+        message: {
+          sticker: { file_id: 'stk_admin', emoji: '👋' },
+        },
+        reply: vi.fn().mockResolvedValue({ message_id: 502 }),
+      };
+
+      for (const entry of registeredOn) {
+        try {
+          await entry.handler(ctx);
+          if (ctx.reply.mock.calls.length > 0) {
+            expect(ctx.reply).toHaveBeenCalledWith(
+              expect.stringContaining('Salom, Administrator! 👋'),
+              expect.objectContaining({ parse_mode: 'HTML' }),
+            );
+            break;
+          }
+        } catch {}
+      }
     });
   });
 
-  describe('Admin Natural Language Lookup and Stats', () => {
+  describe('Admin Natural Language Queries vs Customer Support', () => {
     it('should search and return user card when admin asks about a user', async () => {
       const adminId = config.adminIds[0] || '8191294446';
       registerBotHandlers(mockBot);
@@ -167,7 +224,6 @@ describe('Telegram Features (Sticker Auto-reply & Admin Management)', () => {
 
       vi.mocked(prisma.user.findFirst).mockResolvedValue(mockFoundUser as any);
 
-      // Find the text message handler
       const textHandlerEntry = registeredOn.find(
         (entry) => typeof entry.filter === 'function' && entry.filter.name === 'text',
       ) || registeredOn[registeredOn.length - 1];
@@ -190,13 +246,9 @@ describe('Telegram Features (Sticker Auto-reply & Admin Management)', () => {
       );
     });
 
-    it('should return executive system report when admin asks for general statistics', async () => {
+    it('should treat any general admin message as a question to the bot with executive AI assistant', async () => {
       const adminId = config.adminIds[0] || '8191294446';
       registerBotHandlers(mockBot);
-
-      vi.mocked(prisma.user.count).mockResolvedValue(50);
-      vi.mocked(prisma.verificationRequest.count).mockResolvedValue(10);
-      vi.mocked(prisma.conversation.count).mockResolvedValue(5);
 
       const textHandlerEntry = registeredOn.find(
         (entry) => typeof entry.filter === 'function' && entry.filter.name === 'text',
@@ -204,14 +256,53 @@ describe('Telegram Features (Sticker Auto-reply & Admin Management)', () => {
 
       const ctx = {
         from: { id: Number(adminId) },
-        message: { text: 'umumiy hisobotni ko‘rsat' },
-        reply: vi.fn().mockResolvedValue({ message_id: 202 }),
+        message: { text: 'Botning hozirgi holati va vazifalari qanday?' },
+        reply: vi.fn().mockResolvedValue({ message_id: 203 }),
+        sendChatAction: vi.fn().mockResolvedValue(true),
       };
 
       await textHandlerEntry.handler(ctx);
 
+      expect(aiClient.generateResponse).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
+            role: 'system',
+            content: expect.stringContaining('Executive Assistant'),
+          }),
+          expect.objectContaining({
+            role: 'user',
+            content: 'Botning hozirgi holati va vazifalari qanday?',
+          }),
+        ]),
+      );
       expect(ctx.reply).toHaveBeenCalledWith(
-        expect.stringContaining('ZYNYGRAM UMUMIY TIZIM HISOBOTI'),
+        expect.stringContaining('Hurmatli Administrator'),
+        expect.objectContaining({ parse_mode: 'HTML' }),
+      );
+    });
+
+    it('should handle photo in admin mode without submitting verification queue', async () => {
+      const adminId = config.adminIds[0] || '8191294446';
+      registerBotHandlers(mockBot);
+
+      const photoHandlerEntry = registeredOn.find(
+        (entry) => typeof entry.filter === 'function' && entry.filter.name === 'photo',
+      ) || registeredOn[0];
+
+      const ctx = {
+        from: { id: Number(adminId) },
+        message: {
+          photo: [{ file_id: 'ph_1' }, { file_id: 'ph_largest' }],
+          caption: 'Admin test skrinshot',
+        },
+        reply: vi.fn().mockResolvedValue({ message_id: 301 }),
+      };
+
+      await photoHandlerEntry.handler(ctx);
+
+      expect(prisma.verificationRequest.create).not.toHaveBeenCalled();
+      expect(ctx.reply).toHaveBeenCalledWith(
+        expect.stringContaining('Rasm qabul qilindi (Administrator rejimi)'),
         expect.objectContaining({ parse_mode: 'HTML' }),
       );
     });

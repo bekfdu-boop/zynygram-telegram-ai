@@ -264,6 +264,63 @@ async function renderAdminGeneralInfo(
   });
 }
 
+/**
+ * Processes natural language questions and instructions from the administrator
+ * using AI with live system metrics context.
+ */
+async function handleAdminAIQuery(
+  ctx: any,
+  adminText: string,
+  conversations: ConversationService,
+  verification: VerificationService,
+): Promise<void> {
+  try {
+    if (typeof ctx.sendChatAction === 'function') {
+      await ctx.sendChatAction('typing');
+    }
+
+    const prismaClient = (await import('../database/prisma')).default;
+    const ai = (await import('../ai/client')).default;
+
+    const [userCount, verifiedCount, blockedCount, convStats, vStats] = await Promise.all([
+      prismaClient.user.count(),
+      prismaClient.user.count({ where: { isVerified: true } }),
+      prismaClient.user.count({ where: { isBlocked: true } }),
+      conversations.getConversationStats(),
+      verification.getVerificationStats(),
+    ]);
+
+    const systemPrompt = `Siz Zynygram platformasi asoschisi va bosh administratorining shaxsiy, yuqori intellektli AI assistentisiz (Executive Assistant).
+Siz bilan hozir muloqot qilayotgan shaxs — loyiha rahbari / administratoridir!
+
+Tizimdagi real vaqt ma'lumotlari:
+• Jami foydalanuvchilar: ${userCount} ta
+• Tasdiqlanganlar (ko‘k belgi): ${verifiedCount} ta
+• Bloklanganlar: ${blockedCount} ta
+• Kutilayotgan tasdiqlash arizalari: ${vStats.pending} ta (jami: ${vStats.total} ta, ma'qullangan: ${vStats.approved} ta, rad etilgan: ${vStats.rejected} ta)
+• Muloqotlar: Jami ${convStats.total} ta, ochiq: ${convStats.open} ta, operator navbatida: ${convStats.waitingHuman} ta
+
+QOIDALAR:
+1. Siz administrator bilan gaplashyapsiz. Unga hech qachon "Zynygram bu O'zbekiston ijtimoiy tarmog'i, post qo'yish uchun..." kabi oddiy mijozlarga beriladigan shablonlarni gapirmang!
+2. Uning barcha savollariga (loyihani rivojlantirish, statistika, foydalanuvchilar bilan ishlash, botning imkoniyatlari, texnik masalalar, mijozlarga javob berish bo'yicha maslahatlar) to'g'ridan-to‘g‘ri, aqlli, ixcham va amaliy yordam bering.
+3. O'zbek tilida, hurmat va professionalizm bilan javob qaytaring.`;
+
+    const aiResponse = await ai.generateResponse([
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: adminText },
+    ]);
+
+    const htmlAnswer = markdownToTelegramHtml(aiResponse);
+    await ctx.reply(htmlAnswer, { parse_mode: 'HTML', ...getAdminMainMenu() });
+  } catch (err) {
+    logger.error({ error: err }, 'Failed to generate admin AI assistant response');
+    await ctx.reply(
+      'Kechirasiz, administrator so‘roviga javob shakllantirishda texnik xatolik yuz berdi. Iltimos, birozdan so‘ng qayta urinib ko‘ring.',
+      getAdminMainMenu(),
+    );
+  }
+}
+
 export function registerBotHandlers(
   bot: Telegraf,
   support: SupportService = supportService,
@@ -977,9 +1034,20 @@ ${cleanProof || (photoMatch ? '📸 <i>(Skrinshot ilova qilingan)</i>' : '<i>(Is
     const isAdmin = isSenderAdmin(fromUser.id);
 
     logger.info(
-      { userId: fromUser.id, photoFileId, caption },
-      'Received photo/screenshot from user',
+      { userId: fromUser.id, photoFileId, caption, isAdmin },
+      'Received photo/screenshot',
     );
+
+    if (isAdmin) {
+      await ctx.reply(
+        `📸 <b>Rasm qabul qilindi (Administrator rejimi)</b> 🌟\n\n🆔 <b>File ID:</b> <code>${photoFileId}</code>\n📝 <b>Izoh:</b> ${caption ? escapeTelegramHtml(caption) : '<i>(Izoh yo‘q)</i>'}\n\n<i>Bu rasm ma’muriyat hisobidan yuborilgani sababli verifikatsiya navbatiga kiritilmadi.</i>`,
+        {
+          parse_mode: 'HTML',
+          ...getAdminMainMenu(),
+        },
+      );
+      return;
+    }
 
     const vResult = await verification.submitVerificationRequest({
       telegramId: fromUser.id,
@@ -1004,7 +1072,7 @@ ${cleanProof || (photoMatch ? '📸 <i>(Skrinshot ilova qilingan)</i>' : '<i>(Is
 
     await ctx.reply(photoReply, {
       parse_mode: 'HTML',
-      ...(isAdmin ? getAdminMainMenu() : getUserMainMenu()),
+      ...getUserMainMenu(),
     });
   });
 
@@ -1016,7 +1084,15 @@ ${cleanProof || (photoMatch ? '📸 <i>(Skrinshot ilova qilingan)</i>' : '<i>(Is
     const emoji = ctx.message.sticker.emoji || '👋';
     const isAdmin = isSenderAdmin(fromUser?.id);
 
-    logger.info({ userId: fromUser?.id, emoji }, 'Received sticker from user in bot chat, sending automated greeting');
+    logger.info({ userId: fromUser?.id, emoji, isAdmin }, 'Received sticker from user in bot chat');
+
+    if (isAdmin) {
+      await ctx.reply(
+        `Salom, Administrator! ${emoji} Qanday savol yoki topshiriq bor? Menga bemalol savol yozishingiz, biror foydalanuvchi haqida so‘rashingiz yoki buyruqlardan foydalanishingiz mumkin. 🌟`,
+        { parse_mode: 'HTML', ...getAdminMainMenu() },
+      );
+      return;
+    }
 
     const stickerGreeting =
       `Assalomu alaykum! ${emoji}✨\n\n` +
@@ -1025,7 +1101,7 @@ ${cleanProof || (photoMatch ? '📸 <i>(Skrinshot ilova qilingan)</i>' : '<i>(Is
 
     await ctx.reply(stickerGreeting, {
       parse_mode: 'HTML',
-      ...(isAdmin ? getAdminMainMenu() : getUserMainMenu()),
+      ...getUserMainMenu(),
     });
   });
 
@@ -1067,21 +1143,22 @@ ${cleanProof || (photoMatch ? '📸 <i>(Skrinshot ilova qilingan)</i>' : '<i>(Is
     if (isAdmin) {
       const lower = text.toLowerCase().trim();
 
-      // 1. General system report / stats inquiry
+      // 1. General system report / stats dashboard inquiry (explicit keywords)
       const isGeneralInfo =
         lower === 'statistika' ||
         lower === 'hisobot' ||
+        lower === 'dashboard' ||
         lower === 'umumiy' ||
-        lower.includes('statistika') ||
-        lower.includes('umumiy') ||
-        lower.includes('hisobot') ||
-        lower.includes('holat') ||
-        lower.includes('tizim') ||
-        lower.includes('sistema') ||
-        lower.includes('dashboard') ||
-        lower.includes('report') ||
-        ((lower.includes('qancha') || lower.includes('nechta')) &&
-          (lower.includes('odam') || lower.includes('user') || lower.includes('ariza') || lower.includes('murojaat') || lower.includes('suhbat')));
+        lower === 'tizim' ||
+        lower.startsWith('statistika') ||
+        lower.startsWith('hisobot') ||
+        lower.startsWith('dashboard') ||
+        lower.includes('umumiy ma’lumot') ||
+        lower.includes("umumiy ma'lumot") ||
+        lower.includes('umumiy malumot') ||
+        lower.includes('tizim hisoboti') ||
+        lower.includes('tizim statistikasi') ||
+        /^(\/stat|\/stats|\/dashboard)$/i.test(lower);
 
       if (isGeneralInfo) {
         await renderAdminGeneralInfo(ctx, conversations, verification);
@@ -1116,6 +1193,12 @@ ${cleanProof || (photoMatch ? '📸 <i>(Skrinshot ilova qilingan)</i>' : '<i>(Is
         );
         return;
       }
+
+      // 3. For ALL other questions, instructions, or chat from the administrator:
+      // Treat every single admin message as a direct question/instruction to the bot!
+      // The bot responds as the Admin's Executive AI Assistant with live system metrics.
+      await handleAdminAIQuery(ctx, text, conversations, verification);
+      return;
     }
 
     // If user is sharing any link or proof for verification
