@@ -11,12 +11,14 @@ vi.mock('../src/database/prisma', () => {
       verificationRequest: {
         create: vi.fn(),
         findUnique: vi.fn(),
+        findFirst: vi.fn(),
         update: vi.fn(),
         count: vi.fn(),
         findMany: vi.fn(),
       },
       user: {
         update: vi.fn(),
+        findUnique: vi.fn(),
       },
     },
   };
@@ -30,6 +32,7 @@ describe('VerificationService', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(prisma.verificationRequest.findFirst).mockResolvedValue(null);
 
     mockUser = {
       id: 'usr-ver-123',
@@ -157,7 +160,7 @@ describe('VerificationService', () => {
     );
   });
 
-  it('should reject verification request and notify user', async () => {
+  it('should reject verification request without sending message to user', async () => {
     const mockRequest = {
       id: 'req-001',
       userId: mockUser.id,
@@ -179,11 +182,8 @@ describe('VerificationService', () => {
       where: { id: 'req-001' },
       data: { status: VerificationStatus.REJECTED },
     });
-    expect(mockBot.telegram.sendMessage).toHaveBeenCalledWith(
-      mockUser.telegramId.toString(),
-      VERIFICATION_REJECTED_USER_MESSAGE,
-      expect.objectContaining({ parse_mode: 'HTML' }),
-    );
+    expect(mockBot.telegram.sendMessage).not.toHaveBeenCalled();
+    expect(mockBot.telegram.callApi).not.toHaveBeenCalled();
   });
 
   it('should return verification statistics correctly', async () => {
@@ -270,7 +270,7 @@ describe('VerificationService', () => {
     expect(mockBot.telegram.sendMessage).not.toHaveBeenCalled();
   });
 
-  it('should route rejection message to customer via business_connection_id in business chat', async () => {
+  it('should not route rejection message to customer even via business_connection_id in business chat', async () => {
     const mockBizRequest = {
       id: 'req-biz-002',
       userId: mockUser.id,
@@ -288,12 +288,7 @@ describe('VerificationService', () => {
     const result = await verificationService.rejectRequest('req-biz-002', '8191294446');
 
     expect(result.success).toBe(true);
-    expect(mockBot.telegram.callApi).toHaveBeenCalledWith('sendMessage', {
-      chat_id: '987654321',
-      text: VERIFICATION_REJECTED_USER_MESSAGE,
-      parse_mode: 'HTML',
-      business_connection_id: 'b_conn_123',
-    });
+    expect(mockBot.telegram.callApi).not.toHaveBeenCalled();
     expect(mockBot.telegram.sendMessage).not.toHaveBeenCalled();
   });
 
@@ -324,6 +319,95 @@ describe('VerificationService', () => {
 
     expect(result.success).toBe(true);
     expect(mockBot.telegram.sendMessage).not.toHaveBeenCalled();
+  });
+
+  it('should reject duplicate verification request when user already has a pending request', async () => {
+    const existingPending = {
+      id: 'req-prev-001',
+      userId: mockUser.id,
+      status: VerificationStatus.PENDING,
+      proofText: 'avvalgi isbot',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    vi.mocked(prisma.verificationRequest.findFirst).mockResolvedValue(existingPending as any);
+
+    const result = await verificationService.submitVerificationRequest({
+      telegramId: mockUser.telegramId,
+      username: mockUser.username,
+      firstName: mockUser.firstName,
+      proofText: 'ikkinchi marta yuborishga urinish',
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.alreadySubmitted).toBe(true);
+    expect(result.userMessage).toContain('allaqachon qabul qilingan va ko‘rib chiqilmoqda');
+    expect(prisma.verificationRequest.create).not.toHaveBeenCalled();
+    expect(mockBot.telegram.sendMessage).not.toHaveBeenCalled();
+    expect(mockBot.telegram.sendPhoto).not.toHaveBeenCalled();
+  });
+
+  it('should reject duplicate verification request when user was previously rejected (only 1 request per person)', async () => {
+    const existingRejected = {
+      id: 'req-prev-002',
+      userId: mockUser.id,
+      status: VerificationStatus.REJECTED,
+      proofText: 'rad etilgan ariza',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    vi.mocked(prisma.verificationRequest.findFirst).mockResolvedValue(existingRejected as any);
+
+    const result = await verificationService.submitVerificationRequest({
+      telegramId: mockUser.telegramId,
+      username: mockUser.username,
+      firstName: mockUser.firstName,
+      proofText: 'qaytadan yuborish',
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.alreadySubmitted).toBe(true);
+    expect(result.userMessage).toContain('faqat bir marta qabul qilinadi');
+    expect(prisma.verificationRequest.create).not.toHaveBeenCalled();
+    expect(mockBot.telegram.sendMessage).not.toHaveBeenCalled();
+  });
+
+  it('should reject duplicate verification request when user is already verified', async () => {
+    const verifiedUser = {
+      ...mockUser,
+      isVerified: true,
+    };
+    vi.mocked(userService.getOrCreateUser).mockResolvedValue(verifiedUser as any);
+
+    const result = await verificationService.submitVerificationRequest({
+      telegramId: verifiedUser.telegramId,
+      username: verifiedUser.username,
+      firstName: verifiedUser.firstName,
+      proofText: 'tasdiqlangan foydalanuvchidan yangi ariza',
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.alreadySubmitted).toBe(true);
+    expect(result.userMessage).toContain('allaqachon tasdiqlangan');
+    expect(prisma.verificationRequest.create).not.toHaveBeenCalled();
+    expect(mockBot.telegram.sendMessage).not.toHaveBeenCalled();
+  });
+
+  it('should return correct verification status with getUserVerificationStatus', async () => {
+    userService.findByTelegramId = vi.fn().mockResolvedValue(mockUser);
+    vi.mocked(prisma.verificationRequest.findFirst).mockResolvedValue({
+      id: 'req-status-001',
+      userId: mockUser.id,
+      status: VerificationStatus.PENDING,
+    } as any);
+
+    const statusCheck = await verificationService.getUserVerificationStatus(mockUser.telegramId);
+
+    expect(statusCheck.hasRequest).toBe(true);
+    expect(statusCheck.status).toBe(VerificationStatus.PENDING);
+    expect(statusCheck.message).toContain('Arizangiz ko‘rib chiqilmoqda');
   });
 });
 

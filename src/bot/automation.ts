@@ -151,7 +151,7 @@ export function registerChatAutomationHandlers(
             lowerCaption.includes('user') ||
             lowerCaption.includes('profil');
 
-          if (!hasUsernameInCaption) {
+          if (!vResult.alreadySubmitted && !hasUsernameInCaption) {
             photoReply +=
               '\n\n💡 <b>Muhim eslatma:</b>\nAgar hali yozmagan bo‘lsangiz, tasdiqlash nishoni berilishi kerak bo‘lgan <b>Zynygram ilovasidagi foydalanuvchi nomingizni (username / nikingizni)</b> ham shu yerga yozib yuboring! 📱🛡';
           }
@@ -222,7 +222,7 @@ export function registerChatAutomationHandlers(
             lowerText.includes('profil') ||
             lowerText.includes('login');
 
-          if (!hasUsernameInText) {
+          if (!vResult.alreadySubmitted && !hasUsernameInText) {
             textReply +=
               '\n\n💡 <b>Muhim eslatma:</b>\nAgar hali yozmagan bo‘lsangiz, tasdiqlash nishoni berilishi kerak bo‘lgan <b>Zynygram ilovasidagi foydalanuvchi nomingizni (username / nikingizni)</b> ham shu yerga yozib yuboring! 📱🛡';
           }

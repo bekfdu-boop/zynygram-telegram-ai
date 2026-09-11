@@ -122,6 +122,12 @@ export function registerBotHandlers(
       return;
     }
 
+    const statusCheck = await verification.getUserVerificationStatus(fromUser.id);
+    if (statusCheck.hasRequest || statusCheck.isVerified) {
+      await ctx.reply(statusCheck.message!, { parse_mode: 'HTML', ...getUserMainMenu() });
+      return;
+    }
+
     await ctx.reply(VERIFY_INFO_MESSAGE, { parse_mode: 'HTML', ...getUserMainMenu() });
   });
 
@@ -251,6 +257,14 @@ export function registerBotHandlers(
   // USER MENU BUTTON LISTENERS
   // -------------------------------------------------------------
   bot.hears(USER_MENU_BUTTONS.VERIFY, async (ctx) => {
+    const fromUser = ctx.from;
+    if (fromUser) {
+      const statusCheck = await verification.getUserVerificationStatus(fromUser.id);
+      if (statusCheck.hasRequest || statusCheck.isVerified) {
+        await ctx.reply(statusCheck.message!, { parse_mode: 'HTML', ...getUserMainMenu() });
+        return;
+      }
+    }
     await ctx.reply(VERIFY_INFO_MESSAGE, { parse_mode: 'HTML', ...getUserMainMenu() });
   });
 
@@ -683,7 +697,7 @@ ${cleanProof || (photoMatch ? '📸 <i>(Skrinshot ilova qilingan)</i>' : '<i>(Is
               ? (ctx.callbackQuery.message as { caption?: string }).caption || ''
               : '';
 
-        const rejectionNotice = `${originalText}\n\n━━━━━━━━━━━━━━━━━━━━\n❌ <b>RAD ETILDI</b> (${adminName} tomonidan rad etildi va foydalanuvchiga xabar yuborildi)`;
+        const rejectionNotice = `${originalText}\n\n━━━━━━━━━━━━━━━━━━━━\n❌ <b>RAD ETILDI</b> (${adminName} tomonidan rad etildi)`;
 
         if (ctx.callbackQuery && 'message' in ctx.callbackQuery && ctx.callbackQuery.message && 'caption' in ctx.callbackQuery.message) {
           await ctx.editMessageCaption(rejectionNotice, { parse_mode: 'HTML' });
@@ -735,7 +749,7 @@ ${cleanProof || (photoMatch ? '📸 <i>(Skrinshot ilova qilingan)</i>' : '<i>(Is
       caption.toLowerCase().includes('profil');
 
     let photoReply = vResult.userMessage;
-    if (!hasUsernameInCaption) {
+    if (!vResult.alreadySubmitted && !hasUsernameInCaption) {
       photoReply +=
         '\n\n💡 <b>Muhim eslatma:</b>\nAgar hali yozmagan bo‘lsangiz, tasdiqlash nishoni berilishi kerak bo‘lgan <b>Zynygram ilovasidagi foydalanuvchi nomingizni (username / nikingizni)</b> ham shu yerga yozib yuboring! 📱🛡';
     }
@@ -824,7 +838,7 @@ ${cleanProof || (photoMatch ? '📸 <i>(Skrinshot ilova qilingan)</i>' : '<i>(Is
         lowerText.includes('login');
 
       let textReply = vResult.userMessage;
-      if (!hasUsernameInText) {
+      if (!vResult.alreadySubmitted && !hasUsernameInText) {
         textReply +=
           '\n\n💡 <b>Muhim eslatma:</b>\nAgar hali yozmagan bo‘lsangiz, tasdiqlash nishoni berilishi kerak bo‘lgan <b>Zynygram ilovasidagi foydalanuvchi nomingizni (username / nikingizni)</b> ham shu yerga yozib yuboring! 📱🛡';
       }

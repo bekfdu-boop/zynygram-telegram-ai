@@ -37,10 +37,11 @@ export class VerificationService {
 
   /**
    * Creates a pending verification request and alerts the admin with interactive buttons
+   * Strictly limits verification requests to 1 request per user.
    */
   public async submitVerificationRequest(
     input: CreateVerificationInput,
-  ): Promise<{ success: boolean; requestId: string; userMessage: string }> {
+  ): Promise<{ success: boolean; requestId: string; userMessage: string; alreadySubmitted?: boolean }> {
     try {
       const user = await this.users.getOrCreateUser({
         telegramId: input.telegramId,
@@ -48,6 +49,52 @@ export class VerificationService {
         firstName: input.firstName,
         lastName: input.lastName,
       });
+
+      if (user.isVerified) {
+        logger.info(
+          { userId: user.id, telegramId: user.telegramId.toString() },
+          'User is already verified; duplicate verification request rejected',
+        );
+        return {
+          success: false,
+          alreadySubmitted: true,
+          requestId: '',
+          userMessage: 'ℹ️ Sizning Zynygram profilingiz allaqachon tasdiqlangan! 🛡✨',
+        };
+      }
+
+      const existingRequest = await prisma.verificationRequest.findFirst({
+        where: { userId: user.id },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      if (existingRequest) {
+        logger.info(
+          {
+            userId: user.id,
+            telegramId: user.telegramId.toString(),
+            existingRequestId: existingRequest.id,
+            status: existingRequest.status,
+          },
+          'User already submitted a verification request earlier; only 1 request per user allowed',
+        );
+
+        let userMessage =
+          'ℹ️ Siz allaqachon tasdiqlash so‘rovini yuborgansiz. Tasdiqlash so‘rovi har bir foydalanuvchidan faqat bir marta qabul qilinadi.';
+        if (existingRequest.status === VerificationStatus.PENDING) {
+          userMessage =
+            '⏳ Sizning tasdiqlash so‘rovingiz allaqachon qabul qilingan va ko‘rib chiqilmoqda. Iltimos, mutaxassislarimiz javobini kuting. 🤝';
+        } else if (existingRequest.status === VerificationStatus.APPROVED) {
+          userMessage = 'ℹ️ Sizning Zynygram profilingiz allaqachon tasdiqlangan! 🛡✨';
+        }
+
+        return {
+          success: false,
+          alreadySubmitted: true,
+          requestId: existingRequest.id,
+          userMessage,
+        };
+      }
 
       let finalProof = input.photoFileId
         ? input.proofText
@@ -80,6 +127,7 @@ export class VerificationService {
 
       return {
         success: true,
+        alreadySubmitted: false,
         requestId: request.id,
         userMessage:
           '✅ <b>Arizangiz qabul qilindi!</b> 🌟\n\nSiz yuborgan isbot <i>(havola yoki skrinshot)</i> ma’muriyatimizga ko‘rib chiqish uchun yuborildi. 🛡\n\nTez orada mutaxassislarimiz ko‘rib chiqib, profilingizni tasdiqlashadi. <i>Iltimos, biroz kuting.</i> 🤝✨',
@@ -88,6 +136,7 @@ export class VerificationService {
       logger.error({ error }, 'Failed to submit verification request');
       return {
         success: false,
+        alreadySubmitted: false,
         requestId: '',
         userMessage:
           'Kechirasiz, tasdiqlash so‘rovini qabul qilishda texnik muammo yuz berdi. Iltimos, birozdan so‘ng qayta urinib ko‘ring.',
@@ -183,7 +232,8 @@ export class VerificationService {
   }
 
   /**
-   * Rejects a verification request and notifies the user
+   * Rejects a verification request without sending notification to user
+   * (Tasdiqlash bekor bo'lsa foydalanuvchiga xabar borishi shart emas)
    */
   public async rejectRequest(
     requestId: string,
@@ -209,56 +259,62 @@ export class VerificationService {
 
       logger.info(
         { requestId, userTelegramId, rejectedBy: adminTelegramId },
-        'Verification request rejected by admin',
+        'Verification request rejected by admin (no notification sent to user as per policy)',
       );
 
-      // Send rejection notice to user
-      if (this.botInstance) {
-        let sent = false;
-        const businessMatch = request.proofText?.match(/\[BusinessChat:\s*([^:]+):([^\]]+)\]/);
-
-        if (businessMatch) {
-          const [, connectionId, chatId] = businessMatch;
-          try {
-            await this.botInstance.telegram.callApi('sendMessage', {
-              chat_id: chatId.trim(),
-              text: VERIFICATION_REJECTED_USER_MESSAGE,
-              parse_mode: 'HTML',
-              business_connection_id: connectionId.trim(),
-            } as never);
-            sent = true;
-            logger.info(
-              { requestId, chatId: chatId.trim(), connectionId: connectionId.trim() },
-              'Rejection message successfully sent to user via Telegram Business connection',
-            );
-          } catch (bizErr) {
-            logger.error(
-              { error: bizErr, requestId, chatId, connectionId },
-              'Failed to deliver rejection message via Telegram Business connection',
-            );
-          }
-        }
-
-        // If not sent via business connection, send direct Telegram message (provided user is not admin)
-        if (!sent && userTelegramId !== adminTelegramId.toString()) {
-          try {
-            await this.botInstance.telegram.sendMessage(
-              userTelegramId,
-              VERIFICATION_REJECTED_USER_MESSAGE,
-              { parse_mode: 'HTML' },
-            );
-            sent = true;
-            logger.info({ requestId, userTelegramId }, 'Rejection message sent via direct Telegram chat');
-          } catch (msgErr) {
-            logger.error({ error: msgErr, userTelegramId }, 'Failed to send direct rejection message to user');
-          }
-        }
-      }
-
+      // Do not send rejection notice to user
       return { success: true, userTelegramId };
     } catch (error) {
       logger.error({ error, requestId }, 'Error rejecting verification request');
       return { success: false };
+    }
+  }
+
+  /**
+   * Retrieves verification status for a specific user by telegramId
+   */
+  public async getUserVerificationStatus(telegramId: bigint | string | number): Promise<{
+    isVerified: boolean;
+    hasRequest: boolean;
+    status?: VerificationStatus;
+    message?: string;
+  }> {
+    try {
+      const user = await this.users.findByTelegramId(telegramId);
+      if (!user) {
+        return { isVerified: false, hasRequest: false };
+      }
+      if (user.isVerified) {
+        return {
+          isVerified: true,
+          hasRequest: false,
+          message: '🎉 <b>Sizning profilingiz allaqachon tasdiqlangan!</b> 🛡✨',
+        };
+      }
+      const existingRequest = await prisma.verificationRequest.findFirst({
+        where: { userId: user.id },
+        orderBy: { createdAt: 'desc' },
+      });
+      if (existingRequest) {
+        let message =
+          'ℹ️ Siz allaqachon tasdiqlash so‘rovini yuborgansiz. Tasdiqlash so‘rovi har bir foydalanuvchidan faqat bir marta qabul qilinadi.';
+        if (existingRequest.status === VerificationStatus.PENDING) {
+          message =
+            '⏳ <b>Arizangiz ko‘rib chiqilmoqda!</b>\n\nSizning tasdiqlash so‘rovingiz allaqachon qabul qilingan. Mutaxassislarimiz tez orada ko‘rib chiqishadi. Iltimos, kuting. 🤝';
+        } else if (existingRequest.status === VerificationStatus.APPROVED) {
+          message = '🎉 <b>Sizning profilingiz allaqachon tasdiqlangan!</b> 🛡✨';
+        }
+        return {
+          isVerified: false,
+          hasRequest: true,
+          status: existingRequest.status,
+          message,
+        };
+      }
+      return { isVerified: false, hasRequest: false };
+    } catch (err) {
+      logger.error({ error: err, telegramId: telegramId.toString() }, 'Failed to get user verification status');
+      return { isVerified: false, hasRequest: false };
     }
   }
 
