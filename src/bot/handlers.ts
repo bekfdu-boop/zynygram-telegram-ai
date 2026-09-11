@@ -1,5 +1,6 @@
 import { Telegraf, Markup } from 'telegraf';
 import { message } from 'telegraf/filters';
+import prisma from '../database/prisma';
 import supportService, { SupportService } from '../services/support';
 import userService, { UserService } from '../services/user';
 import conversationService, { ConversationService } from '../services/conversation';
@@ -94,6 +95,173 @@ function isSenderAdmin(fromId?: number | bigint | string): boolean {
   if (!fromId) return false;
   const idStr = fromId.toString();
   return config.adminIds.includes(idStr);
+}
+
+/**
+ * Searches and renders a detailed profile card for admin with interactive buttons
+ */
+async function renderAdminUserCard(ctx: any, query: string): Promise<boolean> {
+  const clean = query.replace(/^@/, '').trim();
+  if (!clean) return false;
+  const isNumeric = /^\d+$/.test(clean);
+
+  const user = await prisma.user.findFirst({
+    where: {
+      OR: [
+        ...(isNumeric ? [{ telegramId: BigInt(clean) }] : []),
+        { username: { equals: clean, mode: 'insensitive' } },
+        { firstName: { contains: clean, mode: 'insensitive' } },
+        { lastName: { contains: clean, mode: 'insensitive' } },
+        {
+          verificationRequests: {
+            some: {
+              proofText: { contains: clean, mode: 'insensitive' },
+            },
+          },
+        },
+      ],
+    },
+    include: {
+      conversations: {
+        orderBy: { updatedAt: 'desc' },
+        take: 1,
+        include: {
+          messages: {
+            orderBy: { createdAt: 'desc' },
+            take: 2,
+          },
+        },
+      },
+      verificationRequests: {
+        orderBy: { createdAt: 'desc' },
+        take: 1,
+      },
+    },
+  });
+
+  if (!user) {
+    return false;
+  }
+
+  const tid = user.telegramId.toString();
+  const userHandle = user.username ? `@${user.username}` : 'Mavjud emas';
+  const fullName = [user.firstName, user.lastName].filter(Boolean).join(' ') || 'Nomsiz foydalanuvchi';
+  const lastConv = user.conversations[0];
+  const lastReq = user.verificationRequests[0];
+
+  const verifBadge = user.isVerified ? '✅ Tasdiqlangan (ko‘k belgi)' : '❌ Tasdiqlanmagan';
+  const blockStatus = user.isBlocked ? '🚫 Bloklangan' : '✅ Faol';
+
+  let reqInfo = 'Yo‘q';
+  if (lastReq) {
+    let reqStatus = '⏳ Kutilmoqda';
+    if (lastReq.status === 'APPROVED') reqStatus = '✅ Tasdiqlangan';
+    if (lastReq.status === 'REJECTED') reqStatus = '❌ Rad etilgan';
+
+    const cleanProof = lastReq.proofText
+      ? lastReq.proofText
+          .replace(/\[Photo:\s*[^\]]+\]/g, '')
+          .replace(/\[BusinessChat:\s*[^\]]+\]/g, '')
+          .trim()
+      : '';
+
+    const photoMatch = lastReq.proofText?.match(/\[Photo:\s*([^\]]+)\]/);
+    const photoText = photoMatch ? '📸 (Skrinshot bor)' : '';
+
+    reqInfo = `${reqStatus} (${lastReq.createdAt.toLocaleString('uz-UZ')})\n   📝 Isbot: <i>${escapeTelegramHtml(cleanProof.substring(0, 100)) || photoText || 'Matn yo‘q'}</i>`;
+  }
+
+  let lastChatInfo = 'Suhbat mavjud emas';
+  if (lastConv && lastConv.messages.length > 0) {
+    const lastMsg = lastConv.messages[0];
+    const roleIcon = lastMsg.role === 'USER' ? '👤 Mijoz:' : '🤖 Bot:';
+    lastChatInfo = `${roleIcon} <i>"${escapeTelegramHtml(lastMsg.content.substring(0, 100))}"</i> (${lastConv.updatedAt.toLocaleString('uz-UZ')})`;
+  }
+
+  const cardText =
+    `👤 <b>FOYDALANUVCHI MA’LUMOTLARI:</b> 🌟\n\n` +
+    `🆔 <b>Telegram ID:</b> <code>${tid}</code>\n` +
+    `👤 <b>Ismi:</b> ${escapeTelegramHtml(fullName)}\n` +
+    `📱 <b>Telegram username:</b> ${userHandle}\n` +
+    `🌐 <b>Tili:</b> ${user.language || 'uz'}\n` +
+    `🛡 <b>Verifikatsiya nishoni:</b> ${verifBadge}\n` +
+    `🚫 <b>Holat:</b> ${blockStatus}\n` +
+    `📅 <b>Ro‘yxatdan o‘tgan:</b> ${user.createdAt.toLocaleString('uz-UZ')}\n\n` +
+    `🛡 <b>Tasdiqlash arizasi:</b>\n${reqInfo}\n\n` +
+    `💬 <b>Oxirgi muloqot:</b>\n${lastChatInfo}`;
+
+  const keyboard = Markup.inlineKeyboard([
+    [
+      Markup.button.callback(
+        user.isBlocked ? '✅ Blokdan chiqarish' : '🚫 Bloklash',
+        `adm_blk:${tid}:${user.isBlocked ? '0' : '1'}`,
+      ),
+      Markup.button.callback(
+        user.isVerified ? '❌ Nishonni bekor qilish' : '🛡 Nishon berish',
+        `adm_ver:${tid}:${user.isVerified ? '0' : '1'}`,
+      ),
+    ],
+  ]);
+
+  await ctx.reply(cardText, {
+    parse_mode: 'HTML',
+    reply_markup: keyboard.reply_markup,
+  });
+
+  return true;
+}
+
+/**
+ * Renders comprehensive executive summary and metrics for admin
+ */
+async function renderAdminGeneralInfo(
+  ctx: any,
+  conversations: ConversationService,
+  verification: VerificationService,
+): Promise<void> {
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
+  const [
+    userCount,
+    verifiedCount,
+    blockedCount,
+    newUsersToday,
+    convStats,
+    vStats,
+  ] = await Promise.all([
+    prisma.user.count(),
+    prisma.user.count({ where: { isVerified: true } }),
+    prisma.user.count({ where: { isBlocked: true } }),
+    prisma.user.count({ where: { createdAt: { gte: todayStart } } }),
+    conversations.getConversationStats(),
+    verification.getVerificationStats(),
+  ]);
+
+  const report =
+    `📊 <b>ZYNYGRAM UMUMIY TIZIM HISOBOTI:</b> 🌟\n` +
+    `🕒 <b>Hisobot vaqti:</b> ${new Date().toLocaleString('uz-UZ')}\n\n` +
+    `👥 <b>Foydalanuvchilar:</b>\n` +
+    `• Jami foydalanuvchilar: <b>${userCount}</b> ta\n` +
+    `• 🛡 Tasdiqlanganlar (ko‘k belgi): <b>${verifiedCount}</b> ta\n` +
+    `• 🆕 Bugun qo‘shilganlar: <b>${newUsersToday}</b> ta\n` +
+    `• 🚫 Bloklanganlar: <b>${blockedCount}</b> ta\n\n` +
+    `🛡 <b>Verifikatsiya (Tasdiqlash arizalari):</b>\n` +
+    `• 📥 Jami kelgan arizalar: <b>${vStats.total}</b> ta\n` +
+    `• ⏳ Ko‘rib chiqilishi kerak: <b>${vStats.pending}</b> ta\n` +
+    `• ✅ Muvaffaqiyatli tasdiqlangan: <b>${vStats.approved}</b> ta\n` +
+    `• ❌ Rad etilgan arizalar: <b>${vStats.rejected}</b> ta\n\n` +
+    `💬 <b>Mijozlar bilan muloqot:</b>\n` +
+    `• 💬 Jami suhbatlar: <b>${convStats.total}</b> ta\n` +
+    `• 🟢 Ochiq suhbatlar: <b>${convStats.open}</b> ta\n` +
+    `• ⏳ Operator navbatida: <b>${convStats.waitingHuman}</b> ta\n` +
+    `• ✅ Yopilgan suhbatlar: <b>${convStats.closed}</b> ta\n\n` +
+    `💡 <i>Foydalanuvchi ma’lumotlarini bilish uchun <code>@username haqida</code> yoki <code>ID raqami</code>ni yozib yuboring!</i>`;
+
+  await ctx.reply(report, {
+    parse_mode: 'HTML',
+    ...getAdminMainMenu(),
+  });
 }
 
 export function registerBotHandlers(
@@ -304,29 +472,7 @@ export function registerBotHandlers(
   // -------------------------------------------------------------
   bot.hears(ADMIN_MENU_BUTTONS.STATS, async (ctx) => {
     if (!isSenderAdmin(ctx.from?.id)) return;
-
-    const [userCount, convStats, vStats] = await Promise.all([
-      users.getUserCount(),
-      conversations.getConversationStats(),
-      verification.getVerificationStats(),
-    ]);
-
-    const report = `📊 <b>Zynygram Tizimining Umumiy Statistikasi:</b> 🌟
-
-👥 <b>Jami foydalanuvchilar:</b> ${userCount} ta
-💬 <b>Jami suhbatlar:</b> ${convStats.total} ta
-🟢 <b>Ochiq suhbatlar:</b> ${convStats.open} ta
-⏳ <b>Navbatda kutayotganlar:</b> ${convStats.waitingHuman} ta
-✅ <b>Yopilgan suhbatlar:</b> ${convStats.closed} ta
-
-━━━━━━━━━━━━━━━━━━━━
-🛡 <b>Tasdiqlash (Verifikatsiya) arizalari:</b>
-📥 <b>Jami kelgan so‘rovlar:</b> ${vStats.total} ta
-⏳ <b>Kutilayotgan (yangi):</b> ${vStats.pending} ta
-✅ <b>Tasdiqlangan:</b> ${vStats.approved} ta
-❌ <b>Rad etilgan:</b> ${vStats.rejected} ta`;
-
-    await ctx.reply(report, { parse_mode: 'HTML', ...getAdminMainMenu() });
+    await renderAdminGeneralInfo(ctx, conversations, verification);
   });
 
   bot.hears(ADMIN_MENU_BUTTONS.VERIFICATION_STATS, async (ctx) => {
@@ -491,28 +637,7 @@ ${cleanProof || (photoMatch ? '📸 <i>(Skrinshot ilova qilingan)</i>' : '<i>(Is
       await ctx.reply(UNAUTHORIZED_ADMIN_MESSAGE);
       return;
     }
-
-    const [userCount, convStats, vStats] = await Promise.all([
-      users.getUserCount(),
-      conversations.getConversationStats(),
-      verification.getVerificationStats(),
-    ]);
-
-    const statsReport = `📊 <b>Tizim Statistikasi:</b> 🌟
-
-👥 <b>Jami foydalanuvchilar:</b> ${userCount}
-💬 <b>Jami suhbatlar:</b> ${convStats.total}
-🟢 <b>Ochiq:</b> ${convStats.open}
-⏳ <b>Navbatda kutayotgan:</b> ${convStats.waitingHuman}
-✅ <b>Yopilgan:</b> ${convStats.closed}
-
-🛡 <b>Verifikatsiya:</b>
-📥 <b>Jami kelgan:</b> ${vStats.total}
-⏳ <b>Kutilmoqda:</b> ${vStats.pending}
-✅ <b>Tasdiqlangan:</b> ${vStats.approved}
-❌ <b>Rad etilgan:</b> ${vStats.rejected}`;
-
-    await ctx.reply(statsReport, { parse_mode: 'HTML', ...getAdminMainMenu() });
+    await renderAdminGeneralInfo(ctx, conversations, verification);
   });
 
   bot.command('users', async (ctx) => {
@@ -621,6 +746,129 @@ ${cleanProof || (photoMatch ? '📸 <i>(Skrinshot ilova qilingan)</i>' : '<i>(Is
       await ctx.reply(`✅ Foydalanuvchi (${targetId}) blokdan chiqarildi.`);
     } catch {
       await ctx.reply(`❌ Foydalanuvchi topilmadi yoki xatolik yuz berdi.`);
+    }
+  });
+
+  bot.command(['user', 'info', 'find', 'whois'], async (ctx) => {
+    if (!isSenderAdmin(ctx.from?.id)) {
+      await ctx.reply(UNAUTHORIZED_ADMIN_MESSAGE);
+      return;
+    }
+
+    const args = ctx.message.text.split(' ').slice(1).join(' ').trim();
+    if (!args) {
+      await ctx.reply('Ishlatish: /user @username yoki /user <telegramId> yoki /user <ism>', getAdminMainMenu());
+      return;
+    }
+
+    const found = await renderAdminUserCard(ctx, args);
+    if (!found) {
+      await ctx.reply(`❌ <b>"${escapeTelegramHtml(args)}"</b> bo‘yicha foydalanuvchi topilmadi.`, {
+        parse_mode: 'HTML',
+        ...getAdminMainMenu(),
+      });
+    }
+  });
+
+  bot.command(['report', 'summary'], async (ctx) => {
+    if (!isSenderAdmin(ctx.from?.id)) {
+      await ctx.reply(UNAUTHORIZED_ADMIN_MESSAGE);
+      return;
+    }
+    await renderAdminGeneralInfo(ctx, conversations, verification);
+  });
+
+  bot.action(/^adm_blk:(\d+):([01])$/, async (ctx) => {
+    try {
+      const fromId = ctx.from?.id?.toString();
+      if (!isSenderAdmin(fromId)) {
+        await ctx.answerCbQuery(UNAUTHORIZED_ADMIN_MESSAGE, { show_alert: true });
+        return;
+      }
+      const targetTelegramId = ctx.match[1];
+      const shouldBlock = ctx.match[2] === '1';
+
+      await users.setBlocked(targetTelegramId, shouldBlock);
+      await ctx.answerCbQuery(shouldBlock ? '🚫 Foydalanuvchi bloklandi' : '✅ Blokdan chiqarildi');
+
+      const originalText =
+        ctx.callbackQuery && 'message' in ctx.callbackQuery && ctx.callbackQuery.message && 'text' in ctx.callbackQuery.message
+          ? ctx.callbackQuery.message.text
+          : '';
+
+      const newStatusLine = shouldBlock ? '🚫 <b>Holat:</b> 🚫 Bloklangan' : '🚫 <b>Holat:</b> ✅ Faol';
+      const updatedText = originalText.replace(/🚫 <b>Holat:<\/b> .+/i, newStatusLine);
+
+      const isVerifiedNow = originalText.includes('✅ Tasdiqlangan');
+      const keyboard = Markup.inlineKeyboard([
+        [
+          Markup.button.callback(
+            shouldBlock ? '✅ Blokdan chiqarish' : '🚫 Bloklash',
+            `adm_blk:${targetTelegramId}:${shouldBlock ? '0' : '1'}`,
+          ),
+          Markup.button.callback(
+            isVerifiedNow ? '❌ Nishonni bekor qilish' : '🛡 Nishon berish',
+            `adm_ver:${targetTelegramId}:${isVerifiedNow ? '0' : '1'}`,
+          ),
+        ],
+      ]);
+
+      if (updatedText && updatedText !== originalText) {
+        await ctx.editMessageText(updatedText, { parse_mode: 'HTML', reply_markup: keyboard.reply_markup });
+      }
+    } catch (err) {
+      logger.error({ error: err }, 'Failed to toggle block status via admin callback');
+      try {
+        await ctx.answerCbQuery('❌ Xatolik yuz berdi');
+      } catch {}
+    }
+  });
+
+  bot.action(/^adm_ver:(\d+):([01])$/, async (ctx) => {
+    try {
+      const fromId = ctx.from?.id?.toString();
+      if (!isSenderAdmin(fromId)) {
+        await ctx.answerCbQuery(UNAUTHORIZED_ADMIN_MESSAGE, { show_alert: true });
+        return;
+      }
+      const targetTelegramId = ctx.match[1];
+      const shouldVerify = ctx.match[2] === '1';
+
+      await users.setVerified(targetTelegramId, shouldVerify);
+      await ctx.answerCbQuery(shouldVerify ? '🛡 Nishon berildi' : '❌ Nishon bekor qilindi');
+
+      const originalText =
+        ctx.callbackQuery && 'message' in ctx.callbackQuery && ctx.callbackQuery.message && 'text' in ctx.callbackQuery.message
+          ? ctx.callbackQuery.message.text
+          : '';
+
+      const newVerifLine = shouldVerify
+        ? '🛡 <b>Verifikatsiya nishoni:</b> ✅ Tasdiqlangan (ko‘k belgi)'
+        : '🛡 <b>Verifikatsiya nishoni:</b> ❌ Tasdiqlanmagan';
+      const updatedText = originalText.replace(/🛡 <b>Verifikatsiya nishoni:<\/b> .+/i, newVerifLine);
+
+      const isBlockedNow = originalText.includes('🚫 Bloklangan');
+      const keyboard = Markup.inlineKeyboard([
+        [
+          Markup.button.callback(
+            isBlockedNow ? '✅ Blokdan chiqarish' : '🚫 Bloklash',
+            `adm_blk:${targetTelegramId}:${isBlockedNow ? '0' : '1'}`,
+          ),
+          Markup.button.callback(
+            shouldVerify ? '❌ Nishonni bekor qilish' : '🛡 Nishon berish',
+            `adm_ver:${targetTelegramId}:${shouldVerify ? '0' : '1'}`,
+          ),
+        ],
+      ]);
+
+      if (updatedText && updatedText !== originalText) {
+        await ctx.editMessageText(updatedText, { parse_mode: 'HTML', reply_markup: keyboard.reply_markup });
+      }
+    } catch (err) {
+      logger.error({ error: err }, 'Failed to toggle verify status via admin callback');
+      try {
+        await ctx.answerCbQuery('❌ Xatolik yuz berdi');
+      } catch {}
     }
   });
 
@@ -761,13 +1009,33 @@ ${cleanProof || (photoMatch ? '📸 <i>(Skrinshot ilova qilingan)</i>' : '<i>(Is
   });
 
   // -------------------------------------------------------------
-  // NON-TEXT CONTENT HANDLERS (voice, video, stickers, files)
+  // STICKER HANDLER (Automated friendly greeting)
+  // -------------------------------------------------------------
+  bot.on(message('sticker'), async (ctx) => {
+    const fromUser = ctx.from;
+    const emoji = ctx.message.sticker.emoji || '👋';
+    const isAdmin = isSenderAdmin(fromUser?.id);
+
+    logger.info({ userId: fromUser?.id, emoji }, 'Received sticker from user in bot chat, sending automated greeting');
+
+    const stickerGreeting =
+      `Assalomu alaykum! ${emoji}✨\n\n` +
+      `<b>Zynygram</b> rasmiy mijozlar bilan ishlash xizmatiga xush kelibsiz! 🌟\n\n` +
+      `Sizga qanday yordam bera olamiz? Akkaunt sozlamalari, <b>tasdiqlash nishonini olish</b> yoki boshqa istalgan masalada savolingizni <i>bemalol yozib qoldirishingiz</i> mumkin. 🤝🚀`;
+
+    await ctx.reply(stickerGreeting, {
+      parse_mode: 'HTML',
+      ...(isAdmin ? getAdminMainMenu() : getUserMainMenu()),
+    });
+  });
+
+  // -------------------------------------------------------------
+  // NON-TEXT CONTENT HANDLERS (voice, video, files)
   // -------------------------------------------------------------
   bot.on(
     [
       message('voice'),
       message('video'),
-      message('sticker'),
       message('document'),
       message('audio'),
       message('video_note'),
@@ -794,6 +1062,61 @@ ${cleanProof || (photoMatch ? '📸 <i>(Skrinshot ilova qilingan)</i>' : '<i>(Is
     }
 
     const isAdmin = isSenderAdmin(fromUser.id);
+
+    // If sender is Admin, support instant user lookup & system reporting
+    if (isAdmin) {
+      const lower = text.toLowerCase().trim();
+
+      // 1. General system report / stats inquiry
+      const isGeneralInfo =
+        lower === 'statistika' ||
+        lower === 'hisobot' ||
+        lower === 'umumiy' ||
+        lower.includes('statistika') ||
+        lower.includes('umumiy') ||
+        lower.includes('hisobot') ||
+        lower.includes('holat') ||
+        lower.includes('tizim') ||
+        lower.includes('sistema') ||
+        lower.includes('dashboard') ||
+        lower.includes('report') ||
+        ((lower.includes('qancha') || lower.includes('nechta')) &&
+          (lower.includes('odam') || lower.includes('user') || lower.includes('ariza') || lower.includes('murojaat') || lower.includes('suhbat')));
+
+      if (isGeneralInfo) {
+        await renderAdminGeneralInfo(ctx, conversations, verification);
+        return;
+      }
+
+      // 2. User lookup / inquiry
+      const usernameMatch = text.match(/@([a-zA-Z0-9_]{3,30})/);
+      const idMatch = text.match(/\b(\d{6,15})\b/);
+      const haqidaMatch = text.match(/([a-zA-Z0-9_.]{3,30})\s+(?:haqida|kim|tekshir|user|info|profil)/i);
+      const userSearchTarget = usernameMatch
+        ? usernameMatch[1]
+        : idMatch
+          ? idMatch[1]
+          : haqidaMatch
+            ? haqidaMatch[1]
+            : null;
+
+      if (userSearchTarget) {
+        const found = await renderAdminUserCard(ctx, userSearchTarget);
+        if (found) {
+          return;
+        }
+      }
+
+      // If text implies asking about a user who was not found
+      if (text.includes('haqida') || text.includes('kim') || text.includes('tekshir')) {
+        const queryTerm = userSearchTarget || text;
+        await ctx.reply(
+          `🔍 <b>"${escapeTelegramHtml(queryTerm)}"</b> bo‘yicha tizimda hech qanday foydalanuvchi yoki ma’lumot topilmadi.\n\nIltimos, Telegram username (<code>@username</code>) yoki Telegram ID raqamini tekshirib qayta yuboring.`,
+          { parse_mode: 'HTML', ...getAdminMainMenu() },
+        );
+        return;
+      }
+    }
 
     // If user is sharing any link or proof for verification
     const hasLink =

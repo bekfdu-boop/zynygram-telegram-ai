@@ -82,8 +82,9 @@ export function registerChatAutomationHandlers(
       const chatId = msg.chat?.id;
       const photoArray = (msg as { photo?: Array<{ file_id: string }> }).photo;
       const caption = (msg as { caption?: string }).caption;
+      const sticker = (msg as { sticker?: { file_id: string; emoji?: string } }).sticker;
 
-      if (!fromUser || !chatId || (!text && !photoArray)) {
+      if (!fromUser || !chatId || (!text && !photoArray && !sticker)) {
         return;
       }
 
@@ -92,7 +93,13 @@ export function registerChatAutomationHandlers(
         fromUserId: fromUser.id,
         fromUsername: fromUser.username,
         chatId,
-        textPreview: text ? text.substring(0, 50) : caption ? `[Photo: ${caption.substring(0, 30)}]` : '[Photo]',
+        textPreview: text
+          ? text.substring(0, 50)
+          : caption
+            ? `[Photo: ${caption.substring(0, 30)}]`
+            : sticker
+              ? `[Sticker: ${sticker.emoji || 'Sticker'}]`
+              : '[Photo]',
       });
 
       // Ignore outgoing messages sent by the business owner to the customer
@@ -124,9 +131,45 @@ export function registerChatAutomationHandlers(
           fromUserId: fromUser.id,
           chatId,
           hasPhoto: !!photoArray,
+          hasSticker: !!sticker,
         },
         'Received automated business message via Telegram Chat Automation',
       );
+
+      // Handle sticker greeting in business chat (when customer sends sticker at beginning or during chat)
+      if (sticker) {
+        const emoji = sticker.emoji || '👋';
+        logger.info(
+          { connectionId, fromUserId: fromUser.id, chatId, emoji },
+          'Incoming business message is a sticker, sending automated greeting reply',
+        );
+
+        const stickerGreeting =
+          `Assalomu alaykum! ${emoji}✨\n\n` +
+          `Xush kelibsiz! Men <b>Zynygram</b> rasmiy mijozlar yordamchisiman. 🌟\n\n` +
+          `Sizga qanday yordam bera olamiz? Savolingiz yoki murojaatingizni <i>matn ko‘rinishida</i> bemalol yozib qoldirishingiz mumkin! 🤝🚀`;
+
+        try {
+          await ctx.telegram.callApi('sendMessage', {
+            chat_id: chatId,
+            text: stickerGreeting,
+            parse_mode: 'HTML',
+            business_connection_id: connectionId,
+          } as never);
+
+          diagnostics.record('business_reply_sent', {
+            chatId,
+            connectionId,
+            textPreview: stickerGreeting.substring(0, 50),
+          });
+        } catch (stkErr) {
+          logger.error(
+            { error: stkErr, connectionId, chatId },
+            'Failed to send automated greeting for sticker in business chat',
+          );
+        }
+        return;
+      }
 
       // Handle photo proof submission in business chat
       if (photoArray && photoArray.length > 0) {
